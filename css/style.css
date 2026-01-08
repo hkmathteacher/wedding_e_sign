@@ -1,0 +1,100 @@
+:root {
+    /* === 第一階段核心：莫蘭迪色盤規劃 === */
+    /* 這些變數確保了所有視覺元素的一致性 */
+
+    /* 背景與基礎色 */
+    --bg-color: #Fdfbf7;   /* 溫暖的米白色紙張質感 */
+    --ink-color: #2c3e50;  /* 統一筆觸顏色：深灰藍 (比純黑更有質感) */
+    
+    /* 賓客類別色 (Morandi Tones) */
+    --c-groom-friend: #9cafb7;  /* 霧霾藍 */
+    --c-bride-friend: #e3c9c9;  /* 藕粉色 */
+    --c-groom-family: #7a9e9f;  /* 灰綠松石 */
+    --c-bride-family: #d4a5a5;  /* 乾燥玫瑰 */
+    --c-colleague:    #b5b7a5;  /* 抹茶灰 */
+    --c-classmate:    #d8c3b7;  /* 奶茶色 */
+    --c-vip:          #d4af37;  /* 復古金 */
+    
+    /* UI 元件樣式 */
+    --border-radius: 12px;
+    --btn-primary: var(--ink-color);
+    --btn-text: #ffffff;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--ink-color);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* 標題風格 */
+h1 {
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 2rem;
+}
+
+/* 畫布容器 - 確保完美的圓形 */
+.canvas-wrapper {
+    width: 280px;
+    height: 280px;
+    background: #fff;
+    border-radius: 50%;
+    border: 2px solid #e0e0e0; /* 預設邊框 */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: border-color 0.3s ease;
+}
+
+canvas {
+    display: block;
+    cursor: crosshair;
+    touch-action: none; /* 防止手機滑動干擾繪圖 */
+}
+
+/* 模板選擇區 */
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 320px;
+}
+
+.tpl-btn {
+    aspect-ratio: 1;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tpl-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.tpl-btn:active {
+    transform: scale(0.95);
+    background: #f0f0f0;
+}
