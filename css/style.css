@@ -1,100 +1,205 @@
 :root {
-    /* === 第一階段核心：莫蘭迪色盤規劃 === */
-    /* 這些變數確保了所有視覺元素的一致性 */
-
-    /* 背景與基礎色 */
-    --bg-color: #Fdfbf7;   /* 溫暖的米白色紙張質感 */
-    --ink-color: #2c3e50;  /* 統一筆觸顏色：深灰藍 (比純黑更有質感) */
+    /* === 第一階段核心：莫蘭迪色盤 === */
+    --bg-color: #Fdfbf7;
+    --ink-color: #2c3e50;
     
-    /* 賓客類別色 (Morandi Tones) */
-    --c-groom-friend: #9cafb7;  /* 霧霾藍 */
-    --c-bride-friend: #e3c9c9;  /* 藕粉色 */
-    --c-groom-family: #7a9e9f;  /* 灰綠松石 */
-    --c-bride-family: #d4a5a5;  /* 乾燥玫瑰 */
-    --c-colleague:    #b5b7a5;  /* 抹茶灰 */
-    --c-classmate:    #d8c3b7;  /* 奶茶色 */
-    --c-vip:          #d4af37;  /* 復古金 */
+    /* 賓客類別色 */
+    --c-groom-friend: #9cafb7;
+    --c-bride-friend: #e3c9c9;
+    --c-groom-family: #7a9e9f;
+    --c-bride-family: #d4a5a5;
+    --c-colleague:    #b5b7a5;
+    --c-classmate:    #d8c3b7;
+    --c-vip:          #d4af37;
     
-    /* UI 元件樣式 */
-    --border-radius: 12px;
-    --btn-primary: var(--ink-color);
-    --btn-text: #ffffff;
+    /* UI 樣式 */
+    --border-color: #e0e0e0;
+    --radius-md: 12px;
+    --radius-full: 30px;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: var(--bg-color);
     color: var(--ink-color);
     margin: 0;
-    padding: 20px;
+    padding: 20px 15px; /* 增加手機版邊距 */
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
+    /* 防止手機下拉重整干擾繪圖 */
+    overscroll-behavior: none; 
 }
 
-/* 標題風格 */
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
 h1 {
     font-weight: 300;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0 0 5px 0;
+    font-size: 1.5rem;
 }
 
 .subtitle {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #888;
-    margin-bottom: 2rem;
 }
 
-/* 畫布容器 - 確保完美的圓形 */
+/* 畫布區 - 加入過渡動畫 */
 .canvas-wrapper {
     width: 280px;
     height: 280px;
     background: #fff;
     border-radius: 50%;
-    border: 2px solid #e0e0e0; /* 預設邊框 */
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border: 3px solid var(--border-color);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     overflow: hidden;
-    margin-bottom: 20px;
-    transition: border-color 0.3s ease;
+    margin-bottom: 25px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    /* 讓瀏覽器知道這裡會有繪圖操作，優化效能 */
+    will-change: transform; 
 }
 
 canvas {
     display: block;
+    touch-action: none; /* 關鍵：禁止畫布上的預設觸控(捲動) */
     cursor: crosshair;
-    touch-action: none; /* 防止手機滑動干擾繪圖 */
 }
 
-/* 模板選擇區 */
+/* 工具與表單區容器 */
+.toolbar, .form-section {
+    width: 100%;
+    max-width: 340px;
+    margin-bottom: 20px;
+}
+
+.section-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* 模板網格 */
 .template-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    margin-bottom: 30px;
-    width: 100%;
-    max-width: 320px;
+    gap: 8px;
+    margin-bottom: 15px;
 }
 
 .tpl-btn {
     aspect-ratio: 1;
     background: #fff;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
+    font-size: 1.2rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
     cursor: pointer;
-    transition: all 0.2s;
-}
-
-.tpl-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.1s;
 }
 
 .tpl-btn:active {
-    transform: scale(0.95);
-    background: #f0f0f0;
+    transform: scale(0.9);
+    background: #f5f5f5;
+}
+
+/* 按鈕系統 */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s;
+    flex: 1;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn.secondary {
+    background: #fff;
+    border: 1px solid var(--ink-color);
+    color: var(--ink-color);
+}
+
+.btn.primary {
+    background: var(--ink-color);
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+}
+
+/* 表單樣式 */
+.input-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--ink-color);
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    background: #fff;
+    box-sizing: border-box; /* 確保 padding 不撐大寬度 */
+    outline: none;
+    -webkit-appearance: none; /* 移除 iOS 預設樣式 */
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--ink-color);
+}
+
+/* 讓 Select 有個客製化箭頭 (Optional) */
+select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1em;
+    padding-right: 30px;
+    border-left: 5px solid var(--ink-color); /* 左側顏色條 */
+}
+
+textarea {
+    resize: none;
+    height: 80px;
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 15px;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+#debug-console {
+    margin-top: 20px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #aaa;
+    word-break: break-all;
+    display: none;
 }
