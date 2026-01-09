@@ -1,29 +1,97 @@
-// === 第一階段核心：資產準備 (Assets) ===
+// === 資產庫 (Assets Library) - 教堂公主風 ===
 
-// 1. SVG 模板庫
-// 統一規格：280x280, stroke-width=3, stroke=#2c3e50 (與 Canvas 筆觸一致)
+// 1. 定義畫筆色盤
+export const brushColors = [
+    { name: 'ink',    hex: '#5d4037', label: '墨咖' }, 
+    { name: 'gold',   hex: '#d4af37', label: '香檳金' },
+    { name: 'pink',   hex: '#e57373', label: '胭脂粉' },
+    { name: 'brown',  hex: '#8d6e63', label: '暖棕' },
+    { name: 'green',  hex: '#81c784', label: '森林綠' },
+];
+
+// 2. SVG 模板庫 (支援彩色)
 export const assets = {
-    // A. 經典表情
-    'smile':   { icon: '😊', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="110" r="10" fill="#2c3e50"/><circle cx="180" cy="110" r="10" fill="#2c3e50"/><path d="M80 170 Q140 230 200 170"/></svg>` },
-    'laugh':   { icon: '😄', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M90 120 Q100 100 110 120"/><path d="M170 120 Q180 100 190 120"/><path d="M80 160 Q140 240 200 160 Z"/></svg>` },
-    'wink':    { icon: '😉', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="90" cy="120" r="8" fill="#2c3e50"/><path d="M170 120 L210 120"/><path d="M100 180 Q140 210 180 180"/></svg>` },
-    'shy':     { icon: '😳', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M80 130 L110 130"/><path d="M170 130 L200 130"/><path d="M120 180 L160 180"/><line x1="70" y1="150" x2="90" y2="160" stroke-opacity="0.3"/><line x1="80" y1="145" x2="100" y2="155" stroke-opacity="0.3"/><line x1="190" y1="150" x2="210" y2="160" stroke-opacity="0.3"/><line x1="180" y1="145" x2="200" y2="155" stroke-opacity="0.3"/></svg>` },
-    
-    // B. 趣味裝飾
-    'cool':    { icon: '😎', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M70 110 H210 L200 150 H80 Z" fill="rgba(44, 62, 80, 0.1)"/><path d="M120 190 Q140 200 160 190"/></svg>` },
-    'glasses': { icon: '👓', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="120" r="35"/><circle cx="180" cy="120" r="35"/><line x1="135" y1="120" x2="145" y2="120"/><path d="M110 200 Q140 200 170 200"/></svg>` },
-    'beard':   { icon: '🧔', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="5" fill="#2c3e50"/><circle cx="180" cy="100" r="5" fill="#2c3e50"/><path d="M100 160 Q140 140 180 160 Q180 190 140 210 Q100 190 100 160"/></svg>` },
-    'cat':     { icon: '🐱', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M70 100 L90 50 L120 90 M210 100 L190 50 L160 90"/><circle cx="100" cy="140" r="5"/><circle cx="180" cy="140" r="5"/><path d="M130 170 L140 180 L150 170"/><path d="M140 180 L140 190 M140 190 Q120 200 110 190 M140 190 Q160 200 170 190"/><line x1="60" y1="160" x2="90" y2="160"/><line x1="60" y1="175" x2="90" y2="170"/><line x1="220" y1="160" x2="190" y2="160"/><line x1="220" y1="175" x2="190" y2="170"/></svg>` },
-    
-    // C. 幾何與抽象
-    'crown':   { icon: '👑', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M80 100 L60 60 L100 80 L140 40 L180 80 L220 60 L200 100"/><circle cx="100" cy="140" r="8"/><circle cx="180" cy="140" r="8"/><path d="M120 200 Q140 220 160 200"/></svg>` },
-    'line':    { icon: '〰️', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><line x1="140" y1="60" x2="140" y2="220"/><line x1="80" y1="120" x2="200" y2="120"/><circle cx="140" cy="140" r="60" stroke-opacity="0.5"/></svg>` },
-    'robot':   { icon: '🤖', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="70" y="70" width="140" height="140" rx="20"/><line x1="60" y1="140" x2="70" y2="140"/><line x1="210" y1="140" x2="220" y2="140"/><line x1="140" y1="60" x2="140" y2="70"/><circle cx="110" cy="120" r="10"/><circle cx="170" cy="120" r="10"/><rect x="100" y="160" width="80" height="20" rx="5"/></svg>` },
-    'flower':  { icon: '🌸', svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="140" cy="140" r="40"/><path d="M140 100 Q140 60 180 60 Q180 100 140 100"/><path d="M180 140 Q220 140 220 180 Q180 180 180 140"/><path d="M140 180 Q140 220 100 220 Q100 180 140 180"/><path d="M100 140 Q60 140 60 100 Q100 100 100 140"/><circle cx="125" cy="130" r="4" fill="#2c3e50"/><circle cx="155" cy="130" r="4" fill="#2c3e50"/><path d="M130 160 Q140 165 150 160"/></svg>` }
+    // A. 基礎表情
+    'base_smile': { 
+        icon: '🙂', 
+        svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#5d4037" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <path d="M70 100 V160 Q70 230 140 230 Q210 230 210 160 V100" stroke="#eee" stroke-width="2"/>
+            <circle cx="80" cy="140" r="10" fill="#e57373" stroke="none" opacity="0.4"/>
+            <circle cx="200" cy="140" r="10" fill="#e57373" stroke="none" opacity="0.4"/>
+            <circle cx="100" cy="130" r="8" fill="#5d4037"/>
+            <circle cx="180" cy="130" r="8" fill="#5d4037"/>
+            <path d="M90 180 Q140 220 190 180"/>
+        </svg>` 
+    },
+    'base_wink': { 
+        icon: '😉', 
+        svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#5d4037" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <path d="M70 100 V160 Q70 230 140 230 Q210 230 210 160 V100" stroke="#eee" stroke-width="2"/>
+            <path d="M90 130 L110 130"/>
+            <circle cx="180" cy="130" r="8" fill="#5d4037"/>
+            <path d="M100 180 Q140 210 180 180"/>
+            <circle cx="200" cy="140" r="10" fill="#e57373" stroke="none" opacity="0.4"/>
+        </svg>` 
+    },
+
+    // B. 髮型與人物
+    'hair_short': { 
+        icon: '👦', 
+        svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#5d4037" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <path d="M60 140 V160 Q60 230 140 230 Q220 230 220 160 V140" fill="#fff"/>
+            <path d="M60 140 Q60 40 140 40 Q220 40 220 140 L220 130 Q180 70 140 80 Q100 70 60 130 Z" fill="#5d4037" stroke="none"/>
+            <path d="M60 140 Q60 40 140 40 Q220 40 220 140" stroke="#5d4037"/>
+            <path d="M60 140 Q100 80 140 90 Q180 80 220 140" stroke="#5d4037"/>
+            <circle cx="100" cy="140" r="6" fill="#5d4037"/>
+            <circle cx="180" cy="140" r="6" fill="#5d4037"/>
+            <path d="M110 190 Q140 200 170 190"/>
+        </svg>` 
+    },
+    'hair_long': { 
+        icon: '👩', 
+        svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#5d4037" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <path d="M80 60 Q140 20 200 60 L220 260 H200 L200 100 Q140 140 70 100 L70 260 H60 L80 60 Z" fill="#8d6e63" stroke="none" opacity="0.8"/>
+            <path d="M80 60 Q140 20 200 60" stroke="#8d6e63"/>
+            <path d="M80 60 L60 260" stroke="#8d6e63"/>
+            <path d="M200 60 L220 260" stroke="#8d6e63"/>
+            <path d="M70 120 V170 Q70 230 140 230 Q210 230 210 170 V120" fill="#fff"/>
+            <path d="M70 120 Q140 160 210 120" stroke="#8d6e63"/>
+            <circle cx="100" cy="140" r="6" fill="#5d4037"/>
+            <circle cx="180" cy="140" r="6" fill="#5d4037"/>
+            <path d="M110 190 Q140 210 170 190"/>
+        </svg>` 
+    },
+
+    // C. 配件
+    'prop_crown': { 
+        icon: '👑', 
+        svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#5d4037" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <path d="M80 80 L60 40 L100 60 L140 20 L180 60 L220 40 L200 80 Z" fill="#d4af37" stroke="#bfa15f"/>
+            <circle cx="60" cy="40" r="3" fill="#e57373" stroke="none"/>
+            <circle cx="140" cy="20" r="3" fill="#e57373" stroke="none"/>
+            <circle cx="220" cy="40" r="3" fill="#e57373" stroke="none"/>
+            <path d="M70 100 V160 Q70 230 140 230 Q210 230 210 160 V100"/>
+            <circle cx="100" cy="140" r="6" fill="#5d4037"/>
+            <circle cx="180" cy="140" r="6" fill="#5d4037"/>
+            <path d="M110 190 Q140 180 170 190"/>
+        </svg>` 
+    },
+    'prop_glasses': { 
+        icon: '👓', 
+        svg: `<svg viewBox="0 0 280 280" fill="none" stroke="#5d4037" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <path d="M70 120 V170 Q70 230 140 230 Q210 230 210 170 V120"/>
+            <path d="M70 120 Q70 60 140 60 Q210 60 210 120" stroke-dasharray="10 5" stroke="#8d6e63"/>
+            <circle cx="100" cy="150" r="30" stroke="#e57373" stroke-width="4"/>
+            <circle cx="180" cy="150" r="30" stroke="#e57373" stroke-width="4"/>
+            <line x1="130" y1="150" x2="150" y2="150" stroke="#e57373" stroke-width="4"/>
+            <path d="M70 150 L50 140" stroke="#e57373"/>
+            <path d="M210 150 L230 140" stroke="#e57373"/>
+            <path d="M120 210 Q140 220 160 210"/>
+        </svg>` 
+    }
 };
 
-// 2. 顏色映射表 (Mapping)
-// 將 CSS 變數名稱對應到程式邏輯中
+// 3. 類別顏色映射 (粉嫩公主系)
 export const categoryColors = {
     'groom_friend': 'var(--c-groom-friend)',
     'bride_friend': 'var(--c-bride-friend)',
