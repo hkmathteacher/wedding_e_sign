@@ -15,8 +15,10 @@ const firebaseConfig = {
 
 // 初始化
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+
+// === 修改點：加上 export 關鍵字，讓 wall.js 可以共用 ===
+export const db = getFirestore(app);
+export const auth = getAuth(app);
 
 // 匿名登入 (確保有權限寫入)
 async function initAuth() {
@@ -40,4 +42,5 @@ export async function saveToCloud(data) {
         timestamp: serverTimestamp(),
         device: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
     });
+
 }
