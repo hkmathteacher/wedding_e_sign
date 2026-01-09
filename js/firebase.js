@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebas
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
 
-// ⚠️ 請確保這裡已經填入你從 Firebase Console 複製的真實設定
+// 您的真實 Firebase 設定
 const firebaseConfig = {
   apiKey: "AIzaSyC7rVKcrDV8DBRuzJlxd4wD0QEGzJZnGhs",
   authDomain: "wedding-e-sign.firebaseapp.com",
@@ -16,11 +16,11 @@ const firebaseConfig = {
 // 初始化
 const app = initializeApp(firebaseConfig);
 
-// === 修改點：加上 export 關鍵字，讓 wall.js 可以共用 ===
+// 匯出 db 與 auth 供其他檔案使用
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-// 匿名登入
+// 匿名登入 (確保有權限寫入)
 async function initAuth() {
     try {
         await signInAnonymously(auth);
