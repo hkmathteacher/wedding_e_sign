@@ -4,200 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lilian & Tony Wedding Wall</title>
-    <!-- 引入與手機端相同的字體 -->
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cinzel:wght@400;600&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* 教堂公主風色盤 (與手機端一致) */
             --bg-start: #fffbf0;
             --bg-end: #fff0f5;
-            --primary: #d4af37;   /* 香檳金 */
-            --secondary: #ffb7c5; /* 櫻花粉 */
-            --text-main: #5d4037; /* 墨咖 */
-            --glass-bg: rgba(255, 255, 255, 0.95);
+            --primary: #d4af37;
+            --text-main: #5d4037;
         }
-
         body {
-            margin: 0;
-            overflow: hidden;
-            /* 淺色漸層背景 */
-            background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
-            color: var(--text-main);
-            font-family: 'Noto Sans TC', sans-serif;
+            margin: 0; overflow: hidden; background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            color: var(--text-main); font-family: 'Noto Sans TC', sans-serif;
         }
-
-        /* 背景光斑裝飾 */
         body::before {
             content: ''; position: fixed; top: -10%; left: -10%; width: 60%; height: 60%;
             background: radial-gradient(circle, rgba(255,215,0,0.15) 0%, transparent 70%);
             filter: blur(50px); z-index: -1; animation: glow 8s infinite alternate;
         }
-
         @keyframes glow { from { opacity: 0.6; } to { opacity: 1; } }
-
-        #galaxyCanvas {
-            display: block; position: absolute; top: 0; left: 0; z-index: 1;
-            /* 滑鼠變手型，提示可點擊 */
-            cursor: pointer; 
-        }
-
-        /* === 標題區 === */
-        .title-overlay {
-            position: absolute; top: 30px; width: 100%; text-align: center; z-index: 2; pointer-events: none;
-        }
+        #galaxyCanvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; cursor: pointer; }
+        .title-overlay { position: absolute; top: 30px; width: 100%; text-align: center; z-index: 2; pointer-events: none; }
         h1 {
-            font-family: 'Great Vibes', cursive;
-            font-weight: 400; font-size: 3.5rem; margin: 0;
-            color: var(--primary);
-            text-shadow: 2px 2px 0px #fff, 0 0 15px rgba(212, 175, 55, 0.3);
+            font-family: 'Great Vibes', cursive; font-weight: 400; font-size: 3.5rem; margin: 0;
+            color: var(--primary); text-shadow: 2px 2px 0px #fff, 0 0 15px rgba(212, 175, 55, 0.3);
         }
-
-        /* === 底部篩選區 (響應式設計) === */
         .filter-container {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 8px 20px;
-            border-radius: 50px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.15);
-            backdrop-filter: blur(10px);
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10;
+            background: rgba(255, 255, 255, 0.8); padding: 8px 20px; border-radius: 50px;
+            border: 1px solid rgba(212, 175, 55, 0.3); backdrop-filter: blur(10px);
             display: flex; justify-content: center;
         }
-
-        /* 1. 電腦版：按鈕列 */
-        .filter-buttons {
-            display: flex; gap: 10px;
-        }
+        .filter-buttons { display: flex; gap: 10px; }
         .filter-btn {
-            background: transparent; border: 1px solid transparent;
-            color: var(--text-main); padding: 6px 15px; border-radius: 20px;
-            cursor: pointer; font-size: 0.9rem; white-space: nowrap;
+            background: transparent; border: 1px solid transparent; color: var(--text-main);
+            padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; white-space: nowrap;
             font-family: 'Cinzel', serif; transition: all 0.3s;
         }
         .filter-btn:hover { background: rgba(255, 183, 197, 0.1); }
-        .filter-btn.active {
-            background: var(--primary); color: #fff;
-            box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4);
-        }
-
-        /* 2. 手機版：下拉選單 (預設隱藏) */
-        .filter-select {
-            display: none;
-            padding: 8px 15px; border: none; background: transparent;
-            font-family: 'Cinzel', serif; font-size: 1rem; color: var(--text-main);
-            outline: none; text-align: center;
-        }
-
-        /* 手機版樣式切換 */
+        .filter-btn.active { background: var(--primary); color: #fff; }
+        .filter-select { display: none; padding: 8px 15px; border: none; background: transparent; font-family: 'Cinzel', serif; font-size: 1rem; color: var(--text-main); outline: none; text-align: center; }
+        
         @media (max-width: 768px) {
             h1 { font-size: 2rem; margin-top: 10px; }
-            .filter-buttons { display: none; } /* 隱藏按鈕 */
-            .filter-select { display: block; } /* 顯示選單 */
+            .filter-buttons { display: none; }
+            .filter-select { display: block; }
             .filter-container { width: 80%; max-width: 300px; padding: 5px 10px; }
             .back-btn { top: 10px; right: 10px; padding: 5px 10px; font-size: 0.8rem; }
         }
-
+        
         .back-btn {
             position: absolute; top: 30px; right: 30px; z-index: 10;
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid var(--primary); color: var(--primary);
+            background: rgba(255, 255, 255, 0.8); border: 1px solid var(--primary); color: var(--primary);
             padding: 8px 20px; border-radius: 30px; text-decoration: none;
             font-family: 'Cinzel', serif; font-weight: bold; font-size: 0.9rem;
-            transition: all 0.3s;
-        }
-        .back-btn:hover { background: var(--primary); color: #fff; }
-
-        /* === 互動視窗 (Modal) === */
-        .modal-overlay {
-            display: none; /* 預設隱藏 */
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 251, 240, 0.6); /* 淺色遮罩 */
-            backdrop-filter: blur(5px);
-            z-index: 100;
-            justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.3s;
-        }
-        .modal-overlay.show { display: flex; opacity: 1; }
-
-        .modal-card {
-            background: #fff;
-            width: 90%; max-width: 360px;
-            border-radius: 140px 140px 20px 20px; /* 拱門形狀 */
-            padding: 40px 30px 30px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.25);
-            border: 2px solid #fff;
-            position: relative;
-            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .modal-overlay.show .modal-card { transform: scale(1); }
-
-        /* 金色邊框光暈 */
-        .modal-card::after {
-            content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
-            border-radius: 145px 145px 25px 25px;
-            border: 1px solid var(--primary); opacity: 0.5; pointer-events: none;
-        }
-
-        .modal-img {
-            width: 200px; height: 200px; object-fit: contain;
-            margin-bottom: 20px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));
-        }
-        .modal-name {
-            font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--primary);
-            margin: 0 0 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;
-        }
-        .modal-msg {
-            font-size: 1rem; color: #666; line-height: 1.6; min-height: 60px;
-            font-style: italic;
-        }
-        .close-modal {
-            position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%);
-            background: #fff; color: var(--text-main); border: none;
-            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-size: 1.2rem;
         }
         
-        #loading {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--primary); font-family: 'Cinzel', serif; z-index: 3;
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 251, 240, 0.6); backdrop-filter: blur(5px); z-index: 100;
+            justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s;
         }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-card {
+            background: #fff; width: 90%; max-width: 360px; border-radius: 140px 140px 20px 20px;
+            padding: 40px 30px 30px; text-align: center; box-shadow: 0 10px 40px rgba(212, 175, 55, 0.25);
+            border: 2px solid #fff; position: relative; transform: scale(0.8); transition: transform 0.3s;
+        }
+        .modal-overlay.show .modal-card { transform: scale(1); }
+        .modal-card::after {
+            content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border-radius: 145px 145px 25px 25px; border: 1px solid var(--primary); opacity: 0.5; pointer-events: none;
+        }
+        .modal-img { width: 200px; height: 200px; object-fit: contain; margin-bottom: 20px; }
+        .modal-name { font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--primary); margin: 0 0 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-msg { font-size: 1rem; color: #666; font-style: italic; min-height: 60px; }
+        .close-modal {
+            position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%);
+            background: #fff; color: var(--text-main); border: none; width: 40px; height: 40px; border-radius: 50%;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-size: 1.2rem;
+        }
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--primary); font-family: 'Cinzel', serif; z-index: 3; }
     </style>
 </head>
 <body>
-
     <a href="index.html" class="back-btn">← 畫畫去</a>
-
-    <div class="title-overlay">
-        <h1>Lilian & Tony Wedding</h1>
-    </div>
-
+    <div class="title-overlay"><h1>Lilian & Tony Wedding</h1></div>
     <div id="loading">Connecting to Galaxy...</div>
-
-    <!-- 篩選區：同時包含 按鈕列(PC) 與 下拉選單(Mobile) -->
     <div class="filter-container">
-        <!-- PC 用 -->
         <div id="filterButtons" class="filter-buttons"></div>
-        <!-- Mobile 用 -->
         <select id="filterSelect" class="filter-select"></select>
     </div>
-
     <canvas id="galaxyCanvas"></canvas>
-
-    <!-- 彈出視窗 (Modal) -->
     <div id="modalOverlay" class="modal-overlay" onclick="closeModal()">
-        <div class="modal-card" onclick="event.stopPropagation()"> <!-- 防止點擊卡片關閉 -->
+        <div class="modal-card" onclick="event.stopPropagation()">
             <img id="modalImg" class="modal-img" src="" alt="Guest Drawing">
-            <h3 id="modalName" class="modal-name">Guest Name</h3>
-            <p id="modalMsg" class="modal-msg">Blessing message...</p>
+            <h3 id="modalName" class="modal-name"></h3>
+            <p id="modalMsg" class="modal-msg"></p>
             <button class="close-modal" onclick="closeModal()">✕</button>
         </div>
     </div>
-
     <script type="module" src="js/wall.js"></script>
-    
-    <!-- 全局函式供 HTML onclick 使用 -->
     <script>
         function closeModal() {
             const overlay = document.getElementById('modalOverlay');
