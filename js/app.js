@@ -27,7 +27,7 @@ const MAX_HISTORY = 10;
 function init() {
     initCanvas();
     renderColorPalette();
-    renderTemplates();
+    renderTemplates(); // 這裡會自動分類渲染
     bindEvents();
     updateCategoryColor();
     saveState();
@@ -42,7 +42,7 @@ function handleIntroAnimation() {
     }, 4500); 
 }
 
-// Canvas
+// === Canvas ===
 function initCanvas() {
     ctx.strokeStyle = currentColor;
     ctx.lineWidth = 3;
@@ -52,7 +52,6 @@ function initCanvas() {
 
 function drawBaseFace() {
     ctx.save();
-    // 稍微加深顏色，確保看得清楚
     ctx.strokeStyle = '#ccc'; 
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -68,25 +67,111 @@ function clearCanvas(saveToHistory = true) {
     if (saveToHistory) saveState();
 }
 
-// === 修復：模板疊加邏輯 ===
+// === 修改：套用模板邏輯 (區分 Face 與 Prop) ===
 function applyTemplate(key) {
-    const svgString = assets[key].svg;
+    const asset = assets[key];
+    const svgString = asset.svg;
+    const type = asset.type; // 取得類型
+
     const img = new Image();
-    
-    // 這裡的 Blob 讀取會依賴 assets.js 裡的 xmlns 屬性
     const blob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
     const url = URL.createObjectURL(blob);
     
     img.onload = function() {
+        if (type === 'face') {
+            // 如果是臉形，先清空畫布 (重置回只有底圖的狀態)，再畫新的臉
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBaseFace();
+        }
+        
+        // 畫上 SVG (如果是 prop 則是直接疊加)
         ctx.drawImage(img, 0, 0);
+        
         URL.revokeObjectURL(url);
-        initCanvas(); 
+        initCanvas(); // 恢復畫筆
         saveState();
     };
-    img.onerror = function() {
-        console.error("SVG 載入失敗，請檢查 assets.js 的 xmlns 屬性");
-    };
     img.src = url;
+}
+
+// UI Rendering
+function renderColorPalette() {
+    colorPalette.innerHTML = '';
+    brushColors.forEach((color, index) => {
+        const btn = document.createElement('div');
+        btn.className = 'color-btn';
+        btn.style.backgroundColor = color.hex;
+        if (index === 0) btn.classList.add('active');
+        btn.addEventListener('click', () => changeColor(color.hex, btn));
+        colorPalette.appendChild(btn);
+    });
+}
+
+function changeColor(hex, btn) {
+    currentColor = hex;
+    ctx.strokeStyle = hex;
+    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+// === 修改：分類渲染模板 ===
+function renderTemplates() {
+    templateGrid.innerHTML = '';
+    
+    // 為了美觀，我們可以在 UI 上稍微分開 (這裡用 CSS Grid 自動排列，但邏輯上還是放在同一個容器)
+    // 建議：先顯示所有 Face，再顯示 Prop
+    
+    const keys = Object.keys(assets);
+    
+    // 先找臉形
+    keys.filter(k => assets[k].type === 'face').forEach(key => createTemplateBtn(key));
+    
+    // 再找配件
+    keys.filter(k => assets[k].type === 'prop').forEach(key => createTemplateBtn(key));
+}
+
+function createTemplateBtn(key) {
+    const btn = document.createElement('div');
+    btn.className = 'tpl-btn';
+    btn.innerHTML = assets[key].icon;
+    // 根據類型給予不同的樣式提示 (選用)
+    if (assets[key].type === 'face') {
+        btn.style.borderColor = '#d4af37'; // 臉形用金色邊框提示
+    }
+    btn.addEventListener('click', (e) => { e.preventDefault(); applyTemplate(key); });
+    templateGrid.appendChild(btn);
+}
+
+// ... (以下標準功能保持不變) ...
+
+function updateCategoryColor() {
+    const colorVar = categoryColors[categorySelect.value] || '#5d4037';
+    canvasWrapper.style.boxShadow = `0 0 0 4px #fff, 0 0 20px ${colorVar}`;
+    categorySelect.style.borderLeft = `5px solid ${colorVar}`;
+}
+
+async function handleSubmit() {
+    const name = document.getElementById('guestName').value.trim();
+    const category = categorySelect.value;
+    const message = document.getElementById('guestMessage').value.trim();
+
+    if (!name) { alert('請留下您的尊姓大名 😉'); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '🚀 正在傳送...';
+
+    try {
+        const imageData = canvas.toDataURL('image/png');
+        await saveToCloud({ name, category, message, imageData });
+        alert('發送成功！快去星空牆找找你的作品吧！');
+        submitBtn.classList.add('hidden');
+        btnGoWallFromDraw.classList.remove('hidden');
+    } catch (error) {
+        console.error("Upload Error:", error);
+        alert('傳送失敗，請再試一次');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✨ 簽到並傳送 ✨';
+    }
 }
 
 // Navigation & Events
@@ -144,63 +229,6 @@ function undo() {
     img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); };
 }
 
-function renderColorPalette() {
-    colorPalette.innerHTML = '';
-    brushColors.forEach((color, index) => {
-        const btn = document.createElement('div');
-        btn.className = 'color-btn';
-        btn.style.backgroundColor = color.hex;
-        if (index === 0) btn.classList.add('active');
-        btn.addEventListener('click', () => changeColor(color.hex, btn));
-        colorPalette.appendChild(btn);
-    });
-}
-function changeColor(hex, btn) {
-    currentColor = hex;
-    ctx.strokeStyle = hex;
-    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-}
-function renderTemplates() {
-    templateGrid.innerHTML = '';
-    Object.keys(assets).forEach(key => {
-        const btn = document.createElement('div');
-        btn.className = 'tpl-btn';
-        btn.innerHTML = assets[key].icon;
-        btn.addEventListener('click', (e) => { e.preventDefault(); applyTemplate(key); });
-        templateGrid.appendChild(btn);
-    });
-}
-function updateCategoryColor() {
-    const colorVar = categoryColors[categorySelect.value] || '#5d4037';
-    canvasWrapper.style.boxShadow = `0 0 0 4px #fff, 0 0 20px ${colorVar}`;
-    categorySelect.style.borderLeft = `5px solid ${colorVar}`;
-}
-
-async function handleSubmit() {
-    const name = document.getElementById('guestName').value.trim();
-    const category = categorySelect.value;
-    const message = document.getElementById('guestMessage').value.trim();
-
-    if (!name) { alert('請留下您的尊姓大名 😉'); return; }
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = '🚀 正在傳送...';
-
-    try {
-        const imageData = canvas.toDataURL('image/png');
-        await saveToCloud({ name, category, message, imageData });
-        alert('發送成功！快去星空牆找找你的作品吧！');
-        submitBtn.classList.add('hidden');
-        btnGoWallFromDraw.classList.remove('hidden');
-    } catch (error) {
-        console.error("Upload Error:", error);
-        alert('傳送失敗，請再試一次');
-        submitBtn.disabled = false;
-        submitBtn.textContent = '✨ 簽到並傳送 ✨';
-    }
-}
-
 function bindEvents() {
     btnGoDraw.addEventListener('click', showDrawing);
     btnGoWall.addEventListener('click', goToWall);
@@ -217,6 +245,7 @@ function bindEvents() {
     clearBtn.addEventListener('click', () => clearCanvas(true));
     submitBtn.addEventListener('click', handleSubmit);
     categorySelect.addEventListener('change', updateCategoryColor);
+    
     drawBaseFace();
 }
 
