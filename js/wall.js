@@ -1,18 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+// === 修改點 1: 改從 firebase.js 引入已經設定好的 db ===
+import { db } from './firebase.js'; 
+import { collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 
-// ⚠️ 請在此處填入您的 Firebase 專案設定 (與 firebase.js 相同)
-const firebaseConfig = {
-    apiKey: "你的_API_KEY",
-    authDomain: "你的專案ID.firebaseapp.com",
-    projectId: "你的專案ID",
-    storageBucket: "你的專案ID.firebasestorage.app",
-    messagingSenderId: "你的SenderID",
-    appId: "你的AppID"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// (這裡不再需要 firebaseConfig 和 initializeApp 了，因為已經在 firebase.js 做過了)
 
 // 參數
 const canvas = document.getElementById('galaxyCanvas');
@@ -233,12 +223,16 @@ function applyFilter(filterId) {
 
 // Firebase 監聽
 function startListening() {
+    // === 修改點 2: 直接使用 db ===
     const q = query(collection(db, "guests"), orderBy("timestamp", "asc"));
     onSnapshot(q, (snapshot) => {
         loading.style.display = 'none';
         allGuests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         updateGuestFilter();
         spawnStars();
+    }, (error) => {
+        console.error("讀取資料失敗:", error);
+        loading.textContent = "讀取失敗，請檢查網路或 API Key";
     });
 }
 
