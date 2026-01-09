@@ -8,37 +8,31 @@
 </head>
 <body>
 
-    <!-- 開場動畫：教堂繪製 -->
+    <!-- === 開場動畫層 (Intro Overlay) === -->
     <div id="introOverlay" class="intro-overlay">
         <svg class="intro-svg" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
-            <path id="churchPath" class="draw-path" d="
-                M 150 300 L 650 300 
-                M 200 300 L 200 180 L 180 180 L 250 100 L 320 180 L 300 180 L 300 300
-                M 500 300 L 500 180 L 480 180 L 550 100 L 620 180 L 600 180 L 600 300
-                M 300 300 L 300 150 L 500 150 L 500 300
-                M 400 150 L 400 50 
-                M 380 70 L 400 30 L 420 70
-                M 385 50 L 415 50
-                M 350 300 C 350 220, 450 220, 450 300" 
-                fill="none" stroke="#d4af37" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-            <text x="50%" y="360" text-anchor="middle" class="draw-text">
+            <!-- 純文字動畫 (金色，放大) -->
+            <!-- x, y 調整至畫面正中 -->
+            <text x="50%" y="55%" text-anchor="middle" class="draw-text">
                 Lilian & Tony
             </text>
         </svg>
     </div>
 
-    <!-- 頁面 1: 首頁 -->
+    <!-- === 頁面 1: 首頁 (Landing Page) === -->
     <div id="landingPage" class="landing-container">
         <div class="landing-content">
-            <div class="logo-circle">
-                <span>L&T</span>
-            </div>
+            <!-- 移除了 Logo 圓圈 -->
+            
             <h1>Lilian & Tony Wedding</h1>
-            <p class="date">2025.12.25</p>
+            
+            <p class="date">2026.02.14</p>
+            
             <p class="intro">
-                在神的見證下，與我們一同分享這份喜悅。<br>
+                與我們一同分享這份喜悅。<br>
                 請繪製您的祝福，點亮我們的婚禮星空。
             </p>
+            
             <div class="landing-buttons">
                 <button id="btnGoDraw" class="btn primary big-btn">🎨 我要畫圖留言</button>
                 <button id="btnGoWall" class="btn secondary big-btn">🌌 直接看展示牆</button>
@@ -46,7 +40,7 @@
         </div>
     </div>
 
-    <!-- 頁面 2: 繪圖頁 -->
+    <!-- === 頁面 2: 繪圖頁 (Drawing Page) === -->
     <div id="drawingPage" class="drawing-container hidden">
         <div class="header">
             <button id="btnBackHome" class="icon-btn">← 回首頁</button>
@@ -61,12 +55,12 @@
             <span class="section-label">選擇畫筆顏色</span>
             <div class="color-palette" id="colorPalette"></div>
 
-            <span class="section-label" style="margin-top: 15px;">選擇模板 或 直接繪畫</span>
+            <span class="section-label" style="margin-top: 15px;">加入裝飾配件 (點擊疊加)</span>
             <div class="template-grid" id="templateGrid"></div>
             
             <div class="action-buttons">
                 <button class="btn secondary" id="undoBtn">↩️ 復原</button>
-                <button class="btn secondary" id="clearBtn">🗑️ 清除</button>
+                <button class="btn secondary" id="clearBtn">🗑️ 重置畫布</button>
             </div>
         </div>
 
@@ -98,6 +92,8 @@
             <button class="btn secondary submit-btn hidden" id="btnGoWallFromDraw">🚀 前往展示牆看我的作品</button>
         </div>
     </div>
+
+    <div id="debug-console"></div>
 
     <script type="module" src="js/app.js"></script>
 </body>
