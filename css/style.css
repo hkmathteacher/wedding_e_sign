@@ -2,10 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cinzel:wght@400;600&family=Noto+Sans+TC:wght@300;400;500&display=swap');
 
 :root {
-    /* === 教堂公主風色盤 === */
-    --bg-gradient-start: #fffbf0; /* 象牙白 */
-    --bg-gradient-end: #fff0f5;   /* 極淡粉紅 */
-    
+    --bg-gradient-start: #fffbf0;
+    --bg-gradient-end: #fff0f5;
     --primary-color: #d4af37;     /* 香檳金 */
     --secondary-color: #ffb7c5;   /* 櫻花粉 */
     --ink-color: #5d4037;         /* 深褐 */
@@ -24,7 +22,6 @@
     --c-vip:          #fff9c4;
 }
 
-/* === 全局 === */
 body {
     font-family: 'Noto Sans TC', sans-serif;
     background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
@@ -38,21 +35,14 @@ body {
     overflow-x: hidden;
 }
 
-/* 光斑背景 */
 body::before {
-    content: '';
-    position: fixed;
-    top: -10%; left: -10%;
-    width: 60%; height: 60%;
+    content: ''; position: fixed; top: -10%; left: -10%; width: 60%; height: 60%;
     background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
-    filter: blur(40px);
-    z-index: -1;
-    animation: glow 8s infinite alternate;
+    filter: blur(40px); z-index: -1; animation: glow 8s infinite alternate;
 }
 
 .hidden { display: none !important; }
 
-/* === 標題 === */
 h1 {
     font-family: 'Great Vibes', cursive;
     font-weight: 400;
@@ -70,7 +60,7 @@ h1 {
     text-transform: uppercase;
 }
 
-/* === 首頁 (Landing) === */
+/* === Landing Page === */
 .landing-container {
     height: 90vh;
     display: flex;
@@ -82,23 +72,9 @@ h1 {
     animation: fadeIn 1s ease;
 }
 
-.logo-circle {
-    width: 100px; height: 120px;
-    background: #fff;
-    border: 2px solid var(--primary-color);
-    border-radius: 50px 50px 0 0; /* 拱門 */
-    margin: 0 auto 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    padding-bottom: 20px;
-    font-family: 'Cinzel', serif;
-    font-size: 2rem;
-    color: var(--primary-color);
-    box-shadow: var(--shadow-holy);
+.landing-content h1 {
+    margin-bottom: 20px;
 }
-.logo-circle span { font-size: 1rem; margin-top: 5px; }
 
 .date {
     font-family: 'Cinzel', serif;
@@ -112,13 +88,23 @@ h1 {
 
 .intro { line-height: 1.6; color: #666; margin-bottom: 40px; }
 
-/* === 按鈕 === */
+/* === 按鈕修正 (強制置中) === */
+.landing-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto; /* 水平置中 */
+    align-items: center; /* 子元素置中 */
+}
+
 .btn {
     padding: 16px 28px;
     border-radius: 30px; 
     border: none;
     cursor: pointer;
-    width: 100%;
+    width: 100%; /* 佔滿 max-width */
     font-size: 1rem;
     font-weight: 600;
     letter-spacing: 1px;
@@ -141,15 +127,7 @@ h1 {
     color: var(--primary-color);
 }
 
-.landing-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-    max-width: 280px;
-}
-
-/* === 繪圖頁 === */
+/* === Drawing Page === */
 .drawing-container {
     width: 100%;
     max-width: 400px;
@@ -170,21 +148,15 @@ h1 {
 .header h1 { font-size: 2rem !important; }
 
 .icon-btn {
-    position: absolute;
-    left: 0;
-    background: none;
-    border: none;
-    color: var(--ink-color);
-    cursor: pointer;
-    font-family: 'Cinzel', serif;
+    position: absolute; left: 0; background: none; border: none;
+    color: var(--ink-color); cursor: pointer; font-family: 'Cinzel', serif;
 }
 
-/* === 畫布：拱門窗戶 === */
+/* 畫布：教堂窗戶風格 */
 .canvas-wrapper {
     width: 280px; height: 280px;
     background: #fff;
-    border-radius: 140px 140px 20px 20px; /* 拱門 */
-    /* 這裡使用透明 border，讓 JS 修改 box-shadow 來製造光暈 */
+    border-radius: 140px 140px 20px 20px;
     border: 4px solid transparent; 
     box-shadow: 0 0 0 1px var(--primary-color), var(--shadow-holy);
     margin-bottom: 30px;
@@ -194,7 +166,7 @@ h1 {
 }
 .canvas-wrapper canvas { cursor: crosshair; touch-action: none; }
 
-/* === 工具列 === */
+/* 工具列 */
 .toolbar, .form-section {
     width: 100%;
     margin-bottom: 25px;
@@ -206,96 +178,62 @@ h1 {
 }
 
 .section-label {
-    display: block;
-    color: var(--primary-color);
-    margin-bottom: 15px;
-    text-align: center;
-    font-size: 0.9rem;
-    font-family: 'Cinzel', serif;
+    display: block; color: var(--primary-color); margin-bottom: 15px;
+    text-align: center; font-size: 0.9rem; font-family: 'Cinzel', serif;
 }
 .section-label::before { content: '✦ '; }
 .section-label::after { content: ' ✦'; }
 
-/* 色盤 */
 .color-palette { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
 .color-btn {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    cursor: pointer;
+    width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;
 }
 .color-btn.active { transform: scale(1.2); box-shadow: 0 0 0 2px var(--primary-color); }
 
-/* 模板 */
 .template-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
 .tpl-btn {
-    aspect-ratio: 1;
-    background: #fff;
-    border-radius: 50% 50% 10px 10px;
-    border: 1px solid #eee;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    cursor: pointer;
+    aspect-ratio: 1; background: #fff; border-radius: 50% 50% 10px 10px;
+    border: 1px solid #eee; display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; cursor: pointer;
 }
 
-/* 表單 */
 .input-group label { display: block; margin-bottom: 8px; color: var(--primary-color); font-family: 'Cinzel', serif; font-weight: 600;}
 input, select, textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    background: #fff;
-    outline: none;
-    font-family: 'Noto Sans TC';
-    box-sizing: border-box;
+    width: 100%; padding: 12px; border: 1px solid #e0e0e0; border-radius: 10px;
+    background: #fff; outline: none; font-family: 'Noto Sans TC'; box-sizing: border-box;
 }
 input:focus, select:focus, textarea:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 .action-buttons { display: flex; gap: 10px; }
 
-/* === 開場動畫 === */
+/* === 開場動畫優化 (文字放大 + 金色) === */
 .intro-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: #fffbf0;
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #fffbf0; z-index: 9999;
+    display: flex; justify-content: center; align-items: center;
     transition: opacity 1s ease-out;
 }
-.intro-svg { width: 80%; max-width: 600px; }
-.draw-path {
-    stroke: var(--primary-color);
-    stroke-width: 2.5;
-    fill: none;
-    stroke-dasharray: 2000;
-    stroke-dashoffset: 2000;
-    animation: dash 3.5s cubic-bezier(0.37, 0, 0.63, 1) forwards;
-}
+.intro-svg { width: 90%; max-width: 600px; }
+
 .draw-text {
     font-family: 'Great Vibes', cursive;
-    font-size: 50px;
+    font-size: 80px; /* 放大文字 */
     fill: transparent;
-    stroke: var(--secondary-color);
-    stroke-width: 1;
-    stroke-dasharray: 500;
-    stroke-dashoffset: 500;
-    animation: dash 3s cubic-bezier(0.37, 0, 0.63, 1) forwards 2s,
-               fillIn 1s ease forwards 4.5s;
+    stroke: var(--primary-color); /* 改為金色 */
+    stroke-width: 1.5;
+    stroke-dasharray: 800;
+    stroke-dashoffset: 800;
+    animation: dash 3s cubic-bezier(0.37, 0, 0.63, 1) forwards 0.5s,
+               fillIn 1s ease forwards 3.0s;
 }
 
 @keyframes dash { to { stroke-dashoffset: 0; } }
-@keyframes fillIn { to { fill: var(--secondary-color); stroke: transparent; } }
+@keyframes fillIn { to { fill: var(--primary-color); stroke: transparent; } } /* 填滿金色 */
 @keyframes glow { from { opacity: 0.5; } to { opacity: 1; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
 .fade-out { opacity: 0; pointer-events: none; }
+.canvas-wrapper[style*="box-shadow"] { border: 4px solid transparent !important; }
