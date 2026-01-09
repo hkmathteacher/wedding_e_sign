@@ -1,16 +1,10 @@
 import { assets, categoryColors, brushColors } from './assets.js';
 import { saveToCloud } from './firebase.js';
 
-// DOM Elements
+// DOM
 const landingPage = document.getElementById('landingPage');
 const drawingPage = document.getElementById('drawingPage');
 const introOverlay = document.getElementById('introOverlay');
-
-const btnGoDraw = document.getElementById('btnGoDraw');
-const btnGoWall = document.getElementById('btnGoWall');
-const btnBackHome = document.getElementById('btnBackHome');
-const btnGoWallFromDraw = document.getElementById('btnGoWallFromDraw');
-
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const submitBtn = document.getElementById('submitBtn');
@@ -20,59 +14,104 @@ const clearBtn = document.getElementById('clearBtn');
 const categorySelect = document.getElementById('guestCategory');
 const canvasWrapper = document.getElementById('canvasWrapper');
 const colorPalette = document.getElementById('colorPalette');
+const btnGoDraw = document.getElementById('btnGoDraw');
+const btnGoWall = document.getElementById('btnGoWall');
+const btnBackHome = document.getElementById('btnBackHome');
+const btnGoWallFromDraw = document.getElementById('btnGoWallFromDraw');
 
-// State
 let isDrawing = false;
 let historyStack = [];
 let currentColor = '#5d4037'; 
 const MAX_HISTORY = 10;
 
-// Init
 function init() {
-    initCanvas();
+    initCanvas(); // 初始化畫布(含底圖)
     renderColorPalette();
     renderTemplates();
     bindEvents();
     updateCategoryColor();
-    saveState();
+    saveState(); // 儲存初始空白(含底圖)狀態
     
     handleIntroAnimation();
 }
 
 function handleIntroAnimation() {
-    // 時間延長至 7.5 秒 (配合 SVG CSS 動畫時間)
+    // 縮短動畫時間至 4.5s (文字動畫較快)
     setTimeout(() => {
         introOverlay.classList.add('fade-out');
-        setTimeout(() => {
-            introOverlay.style.display = 'none';
-        }, 800); 
-    }, 7500); 
+        setTimeout(() => { introOverlay.style.display = 'none'; }, 800); 
+    }, 4500); 
 }
 
-// Navigation
-function showDrawing() {
-    landingPage.classList.add('hidden');
-    drawingPage.classList.remove('hidden');
-    initCanvas();
-}
+// === 核心：畫布邏輯 ===
 
-function showLanding() {
-    drawingPage.classList.add('hidden');
-    landingPage.classList.remove('hidden');
-}
-
-function goToWall() {
-    window.location.href = 'wall.html';
-}
-
-// Canvas Logic
 function initCanvas() {
+    // 設定畫筆
     ctx.strokeStyle = currentColor;
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 }
 
+// 繪製固定臉型底圖 (Guide)
+function drawBaseFace() {
+    ctx.save();
+    // 畫一個淡淡的圓臉輪廓
+    ctx.strokeStyle = '#e0e0e0'; // 極淡灰色
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    // 參數: x, y, radius, startAngle, endAngle
+    ctx.arc(140, 140, 90, 0, Math.PI * 2); 
+    ctx.stroke();
+    
+    // 畫淡淡的十字線輔助 (選用)
+    // ctx.beginPath();
+    // ctx.moveTo(140, 60); ctx.lineTo(140, 220);
+    // ctx.moveTo(80, 140); ctx.lineTo(200, 140);
+    // ctx.stroke();
+    
+    ctx.restore();
+}
+
+function clearCanvas(saveToHistory = true) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBaseFace(); // 清除後立刻補上底圖
+    initCanvas();   // 恢復畫筆設定
+    if (saveToHistory) saveState();
+}
+
+// === 模板功能改為「疊加 (Overlay)」 ===
+function applyTemplate(key) {
+    // 注意：這裡移除了 clearCanvas()，改為直接疊加
+    
+    const svgString = assets[key].svg;
+    const img = new Image();
+    const blob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    
+    img.onload = function() {
+        ctx.drawImage(img, 0, 0); // 蓋在當前畫面上
+        URL.revokeObjectURL(url);
+        initCanvas(); // 確保畫完後畫筆狀態正確
+        saveState();  // 記錄這一筆操作
+    };
+    img.src = url;
+}
+
+// Navigation
+function showDrawing() {
+    landingPage.classList.add('hidden');
+    drawingPage.classList.remove('hidden');
+    // 進來時若畫布是空的(或只有底圖)，可以再次確保尺寸正確
+    // initCanvas(); 
+}
+function showLanding() {
+    drawingPage.classList.add('hidden');
+    landingPage.classList.remove('hidden');
+}
+function goToWall() { window.location.href = 'wall.html'; }
+
+// Drawing Events
 function getPos(evt) {
     const rect = canvas.getBoundingClientRect();
     let clientX, clientY;
@@ -87,7 +126,6 @@ function getPos(evt) {
     const scaleY = canvas.height / rect.height;
     return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
 }
-
 function startDraw(e) {
     if (e.type === 'mousedown' && e.button !== 0) return;
     isDrawing = true;
@@ -96,7 +134,6 @@ function startDraw(e) {
     ctx.moveTo(pos.x, pos.y);
     if(e.cancelable) e.preventDefault();
 }
-
 function draw(e) {
     if (!isDrawing) return;
     const pos = getPos(e);
@@ -104,32 +141,28 @@ function draw(e) {
     ctx.stroke();
     if(e.cancelable) e.preventDefault();
 }
-
-function endDraw(e) {
-    if (isDrawing) { isDrawing = false; ctx.closePath(); saveState(); }
-}
+function endDraw(e) { if (isDrawing) { isDrawing = false; ctx.closePath(); saveState(); } }
 
 function saveState() {
     if (historyStack.length >= MAX_HISTORY) historyStack.shift();
     historyStack.push(canvas.toDataURL());
 }
-
 function undo() {
-    if (historyStack.length <= 1) { clearCanvas(false); return; }
+    if (historyStack.length <= 1) { 
+        clearCanvas(false); 
+        return; 
+    }
     historyStack.pop();
     const prevState = historyStack[historyStack.length - 1];
     const img = new Image();
     img.src = prevState;
-    img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); };
+    img.onload = () => { 
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        ctx.drawImage(img, 0, 0); 
+    };
 }
 
-function clearCanvas(saveToHistory = true) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    initCanvas();
-    if (saveToHistory) saveState();
-}
-
-// UI Rendering
+// UI
 function renderColorPalette() {
     colorPalette.innerHTML = '';
     brushColors.forEach((color, index) => {
@@ -141,14 +174,12 @@ function renderColorPalette() {
         colorPalette.appendChild(btn);
     });
 }
-
 function changeColor(hex, btn) {
     currentColor = hex;
     ctx.strokeStyle = hex;
     document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 }
-
 function renderTemplates() {
     templateGrid.innerHTML = '';
     Object.keys(assets).forEach(key => {
@@ -159,25 +190,8 @@ function renderTemplates() {
         templateGrid.appendChild(btn);
     });
 }
-
-function applyTemplate(key) {
-    clearCanvas(false);
-    const svgString = assets[key].svg;
-    const img = new Image();
-    const blob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    img.onload = function() {
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-        initCanvas();
-        saveState();
-    };
-    img.src = url;
-}
-
 function updateCategoryColor() {
     const colorVar = categoryColors[categorySelect.value] || '#5d4037';
-    // 改為發光效果
     canvasWrapper.style.boxShadow = `0 0 0 4px #fff, 0 0 20px ${colorVar}`;
     categorySelect.style.borderLeft = `5px solid ${colorVar}`;
 }
@@ -188,10 +202,7 @@ async function handleSubmit() {
     const category = categorySelect.value;
     const message = document.getElementById('guestMessage').value.trim();
 
-    if (!name) {
-        alert('請留下您的尊姓大名 😉');
-        return;
-    }
+    if (!name) { alert('請留下您的尊姓大名 😉'); return; }
 
     submitBtn.disabled = true;
     submitBtn.textContent = '🚀 正在傳送...';
@@ -199,11 +210,9 @@ async function handleSubmit() {
     try {
         const imageData = canvas.toDataURL('image/png');
         await saveToCloud({ name, category, message, imageData });
-
         alert('發送成功！快去星空牆找找你的作品吧！');
         submitBtn.classList.add('hidden');
         btnGoWallFromDraw.classList.remove('hidden');
-
     } catch (error) {
         console.error("Upload Error:", error);
         alert('傳送失敗，請再試一次');
@@ -212,13 +221,11 @@ async function handleSubmit() {
     }
 }
 
-// Bind Events
 function bindEvents() {
     btnGoDraw.addEventListener('click', showDrawing);
     btnGoWall.addEventListener('click', goToWall);
     btnBackHome.addEventListener('click', showLanding);
     btnGoWallFromDraw.addEventListener('click', goToWall);
-
     canvas.addEventListener('mousedown', startDraw);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', endDraw);
@@ -226,11 +233,13 @@ function bindEvents() {
     canvas.addEventListener('touchstart', startDraw, {passive: false});
     canvas.addEventListener('touchmove', draw, {passive: false});
     canvas.addEventListener('touchend', endDraw);
-
     undoBtn.addEventListener('click', undo);
     clearBtn.addEventListener('click', () => clearCanvas(true));
     submitBtn.addEventListener('click', handleSubmit);
     categorySelect.addEventListener('change', updateCategoryColor);
+    
+    // 第一次初始化確保有底圖
+    drawBaseFace();
 }
 
 init();
