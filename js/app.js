@@ -25,85 +25,74 @@ let currentColor = '#5d4037';
 const MAX_HISTORY = 10;
 
 function init() {
-    initCanvas(); // 初始化畫布(含底圖)
+    initCanvas();
     renderColorPalette();
     renderTemplates();
     bindEvents();
     updateCategoryColor();
-    saveState(); // 儲存初始空白(含底圖)狀態
+    saveState();
     
     handleIntroAnimation();
 }
 
 function handleIntroAnimation() {
-    // 縮短動畫時間至 4.5s (文字動畫較快)
     setTimeout(() => {
         introOverlay.classList.add('fade-out');
         setTimeout(() => { introOverlay.style.display = 'none'; }, 800); 
     }, 4500); 
 }
 
-// === 核心：畫布邏輯 ===
-
+// Canvas
 function initCanvas() {
-    // 設定畫筆
     ctx.strokeStyle = currentColor;
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 }
 
-// 繪製固定臉型底圖 (Guide)
 function drawBaseFace() {
     ctx.save();
-    // 畫一個淡淡的圓臉輪廓
-    ctx.strokeStyle = '#e0e0e0'; // 極淡灰色
+    // 稍微加深顏色，確保看得清楚
+    ctx.strokeStyle = '#ccc'; 
     ctx.lineWidth = 2;
     ctx.beginPath();
-    // 參數: x, y, radius, startAngle, endAngle
     ctx.arc(140, 140, 90, 0, Math.PI * 2); 
     ctx.stroke();
-    
-    // 畫淡淡的十字線輔助 (選用)
-    // ctx.beginPath();
-    // ctx.moveTo(140, 60); ctx.lineTo(140, 220);
-    // ctx.moveTo(80, 140); ctx.lineTo(200, 140);
-    // ctx.stroke();
-    
     ctx.restore();
 }
 
 function clearCanvas(saveToHistory = true) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBaseFace(); // 清除後立刻補上底圖
-    initCanvas();   // 恢復畫筆設定
+    drawBaseFace();
+    initCanvas();
     if (saveToHistory) saveState();
 }
 
-// === 模板功能改為「疊加 (Overlay)」 ===
+// === 修復：模板疊加邏輯 ===
 function applyTemplate(key) {
-    // 注意：這裡移除了 clearCanvas()，改為直接疊加
-    
     const svgString = assets[key].svg;
     const img = new Image();
+    
+    // 這裡的 Blob 讀取會依賴 assets.js 裡的 xmlns 屬性
     const blob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
     const url = URL.createObjectURL(blob);
     
     img.onload = function() {
-        ctx.drawImage(img, 0, 0); // 蓋在當前畫面上
+        ctx.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
-        initCanvas(); // 確保畫完後畫筆狀態正確
-        saveState();  // 記錄這一筆操作
+        initCanvas(); 
+        saveState();
+    };
+    img.onerror = function() {
+        console.error("SVG 載入失敗，請檢查 assets.js 的 xmlns 屬性");
     };
     img.src = url;
 }
 
-// Navigation
+// Navigation & Events
 function showDrawing() {
     landingPage.classList.add('hidden');
     drawingPage.classList.remove('hidden');
-    // 進來時若畫布是空的(或只有底圖)，可以再次確保尺寸正確
-    // initCanvas(); 
 }
 function showLanding() {
     drawingPage.classList.add('hidden');
@@ -111,7 +100,6 @@ function showLanding() {
 }
 function goToWall() { window.location.href = 'wall.html'; }
 
-// Drawing Events
 function getPos(evt) {
     const rect = canvas.getBoundingClientRect();
     let clientX, clientY;
@@ -148,21 +136,14 @@ function saveState() {
     historyStack.push(canvas.toDataURL());
 }
 function undo() {
-    if (historyStack.length <= 1) { 
-        clearCanvas(false); 
-        return; 
-    }
+    if (historyStack.length <= 1) { clearCanvas(false); return; }
     historyStack.pop();
     const prevState = historyStack[historyStack.length - 1];
     const img = new Image();
     img.src = prevState;
-    img.onload = () => { 
-        ctx.clearRect(0, 0, canvas.width, canvas.height); 
-        ctx.drawImage(img, 0, 0); 
-    };
+    img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); };
 }
 
-// UI
 function renderColorPalette() {
     colorPalette.innerHTML = '';
     brushColors.forEach((color, index) => {
@@ -196,7 +177,6 @@ function updateCategoryColor() {
     categorySelect.style.borderLeft = `5px solid ${colorVar}`;
 }
 
-// Submit
 async function handleSubmit() {
     const name = document.getElementById('guestName').value.trim();
     const category = categorySelect.value;
@@ -237,8 +217,6 @@ function bindEvents() {
     clearBtn.addEventListener('click', () => clearCanvas(true));
     submitBtn.addEventListener('click', handleSubmit);
     categorySelect.addEventListener('change', updateCategoryColor);
-    
-    // 第一次初始化確保有底圖
     drawBaseFace();
 }
 
