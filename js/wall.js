@@ -137,7 +137,6 @@ class Bubble {
 
         if (this.mode === 'bounce') {
             const padding = this.size;
-            // 修正：底部邊界計算 (總高度 - 邊距 - 半徑)
             const bottomLimit = canvas.height - BOTTOM_MARGIN - padding;
 
             if (this.x < padding) {
@@ -152,9 +151,8 @@ class Bubble {
                 this.y = padding;
                 this.vy *= -1;
             } else if (this.y > bottomLimit) {
-                // 關鍵修復：如果卡在底部，強制拉回界線內，並反轉速度
                 this.y = bottomLimit; 
-                this.vy = -Math.abs(this.vy); // 確保速度是向上的
+                this.vy = -Math.abs(this.vy); 
             }
         } else {
             const margin = 150;
@@ -184,15 +182,15 @@ class Bubble {
         ctx.beginPath();
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
         
-        // 修改：使用 90% 不透明白色，增加對比度但保留一點點透感
-        ctx.fillStyle = "rgba(255, 255, 255, 0.9)"; 
+        // ★ 修改 3: 使用 100% 不透明白色，增加對比度但保留一點點透感
+        ctx.fillStyle = "#FFFFFF"; 
         ctx.fill();
         
         ctx.lineWidth = 2;
         ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
         ctx.stroke();
 
-        // 3. 畫頭像 (多重疊加顯影法)
+        // 3. 畫頭像 (裁切)
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
@@ -201,73 +199,10 @@ class Bubble {
         
         ctx.globalAlpha = 1.0;
         
-        // === 關鍵修改：原地疊加 4 次 ===
-        // 這會讓縮小後變淡的半透明像素迅速變回實心顏色
-        // 解決「白色背景吃掉線條」的問題，且不會有偏移模糊
+        // ★ 修改 4: 移除原本 50 行的疊加，只繪製一次
+        // 由於我們在 app.js 加粗了線條，這裡直接縮放即可清晰顯示
         const s = this.size * 2;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-
-
-
         
         // 4. 名字標籤
         ctx.restore();
