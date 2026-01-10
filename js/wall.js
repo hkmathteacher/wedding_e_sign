@@ -180,7 +180,7 @@ class Bubble {
         ctx.beginPath();
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
         // 使用 0.85 的不透明度，既能遮擋雜訊，又能保留透光感
-        ctx.fillStyle = "rgba(255, 255, 255, 0.85)"; 
+        ctx.fillStyle = "rgba(255, 255, 255, 1)"; 
         ctx.fill();
         
         // 邊框
@@ -344,3 +344,4 @@ function animate(time) {
 renderFilterUI();
 startListening();
 requestAnimationFrame(animate);
+
