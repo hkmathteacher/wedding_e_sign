@@ -193,7 +193,7 @@ class Bubble {
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
         
         // 實色背景：純白不透明
-        ctx.fillStyle = "#ffffff"; 
+        ctx.fillStyle = "rgba(255, 255, 255, 0.1)";; 
         ctx.fill();
         
         ctx.lineWidth = 2;
@@ -335,3 +335,4 @@ function animate(time) {
 renderFilterUI();
 startListening();
 requestAnimationFrame(animate);
+
