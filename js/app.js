@@ -23,6 +23,7 @@ let isDrawing = false;
 let historyStack = [];
 let currentColor = '#333333'; 
 const MAX_HISTORY = 10;
+const dpr = window.devicePixelRatio || 1;
 
 function init() {
     initCanvas();
@@ -30,7 +31,8 @@ function init() {
     renderTemplates();
     bindEvents();
     updateCategoryColor();
-    saveState();
+    // 移除 saveState，避免初始化就把空白畫布存入歷史
+    // saveState(); 
     handleIntroAnimation();
 }
 
@@ -42,17 +44,32 @@ function handleIntroAnimation() {
 }
 
 function initCanvas() {
+    // 1. 設定畫布的「物理像素」大小
+    canvas.width = 280 * dpr;
+    canvas.height = 280 * dpr;
+    
+    // 2. 透過 CSS 強制設定顯示大小
+    canvas.style.width = '280px';
+    canvas.style.height = '280px';
+    
+    // 3. 縮放繪圖內容以符合邏輯座標
+    ctx.scale(dpr, dpr);
+
     ctx.strokeStyle = currentColor;
-    // ★ 修改 1: 畫筆加粗到 6，這樣縮小後線條才不會消失
-    ctx.lineWidth = 6;
+    // ★ 回退：改回 3px，保持細緻
+    ctx.lineWidth = 3; 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    
+    drawBaseFace();
+    saveState();
 }
 
 function drawBaseFace() {
     ctx.save();
-    ctx.strokeStyle = '#ccc'; 
-    ctx.lineWidth = 2; // 輪廓可以維持細一點，或者也加粗到 4
+    // 臉形輪廓保持深灰色，但線條改回較細的 2px
+    ctx.strokeStyle = '#999999'; 
+    ctx.lineWidth = 2; 
     ctx.beginPath();
     ctx.arc(140, 140, 90, 0, Math.PI * 2); 
     ctx.stroke();
@@ -60,24 +77,29 @@ function drawBaseFace() {
 }
 
 function clearCanvas(saveToHistory = true) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // 傳入邏輯座標 280x280 即可 (因為有 scale)
+    ctx.clearRect(0, 0, 280, 280);
+    
     drawBaseFace();
-    initCanvas();
+    
+    // 重置畫筆
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = 3; // ★ 回退到 3
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
     if (saveToHistory) saveState();
 }
 
-// 渲染模板 (含標題)
 function renderTemplates() {
     templateGrid.innerHTML = '';
     
-    // 臉形區
     const faceHeader = document.createElement('div');
     faceHeader.className = 'template-header';
     faceHeader.textContent = '- 選擇臉形模版 -';
     templateGrid.appendChild(faceHeader);
     Object.keys(assets).filter(k => assets[k].type === 'face').forEach(key => createTemplateBtn(key));
     
-    // 配件區
     const propHeader = document.createElement('div');
     propHeader.className = 'template-header';
     propHeader.textContent = '- 加入裝飾配件 -';
@@ -105,12 +127,11 @@ function applyTemplate(key) {
     
     img.onload = function() {
         if (type === 'face') {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, 280, 280);
             drawBaseFace();
         }
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, 280, 280);
         URL.revokeObjectURL(url);
-        initCanvas(); 
         saveState();
     };
     img.src = url;
@@ -127,17 +148,20 @@ function renderColorPalette() {
         colorPalette.appendChild(btn);
     });
 }
+
 function changeColor(hex, btn) {
     currentColor = hex;
     ctx.strokeStyle = hex;
     document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 }
+
 function updateCategoryColor() {
     const colorVar = categoryColors[categorySelect.value] || '#5d4037';
     canvasWrapper.style.boxShadow = `0 0 0 4px #fff, 0 0 20px ${colorVar}`;
     categorySelect.style.borderLeft = `5px solid ${colorVar}`;
 }
+
 async function handleSubmit() {
     const name = document.getElementById('guestName').value.trim();
     const category = categorySelect.value;
@@ -158,23 +182,44 @@ async function handleSubmit() {
         submitBtn.textContent = '✨ 簽到並傳送 ✨';
     }
 }
+
 function showDrawing() { landingPage.classList.add('hidden'); drawingPage.classList.remove('hidden'); }
 function showLanding() { drawingPage.classList.add('hidden'); landingPage.classList.remove('hidden'); }
 function goToWall() { window.location.href = 'wall.html'; }
+
 function getPos(evt) {
     const rect = canvas.getBoundingClientRect();
     let clientX, clientY;
     if (evt.touches && evt.touches.length > 0) { clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY; }
     else { clientX = evt.clientX; clientY = evt.clientY; }
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    
+    return { 
+        x: (clientX - rect.left), 
+        y: (clientY - rect.top) 
+    };
 }
+
 function startDraw(e) { if (e.type === 'mousedown' && e.button !== 0) return; isDrawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); if(e.cancelable) e.preventDefault(); }
 function draw(e) { if (!isDrawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); if(e.cancelable) e.preventDefault(); }
 function endDraw(e) { if (isDrawing) { isDrawing = false; ctx.closePath(); saveState(); } }
-function saveState() { if (historyStack.length >= MAX_HISTORY) historyStack.shift(); historyStack.push(canvas.toDataURL()); }
-function undo() { if (historyStack.length <= 1) { clearCanvas(false); return; } historyStack.pop(); const prevState = historyStack[historyStack.length - 1]; const img = new Image(); img.src = prevState; img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); }; }
+
+function saveState() { 
+    if (historyStack.length >= MAX_HISTORY) historyStack.shift(); 
+    historyStack.push(canvas.toDataURL()); 
+}
+
+function undo() { 
+    if (historyStack.length <= 1) { clearCanvas(false); return; } 
+    historyStack.pop(); 
+    const prevState = historyStack[historyStack.length - 1]; 
+    const img = new Image(); 
+    img.src = prevState; 
+    img.onload = () => { 
+        ctx.clearRect(0, 0, 280, 280); 
+        ctx.drawImage(img, 0, 0, 280, 280);
+    }; 
+}
+
 function bindEvents() {
     btnGoDraw.addEventListener('click', showDrawing);
     btnGoWall.addEventListener('click', goToWall);
@@ -191,6 +236,5 @@ function bindEvents() {
     clearBtn.addEventListener('click', () => clearCanvas(true));
     submitBtn.addEventListener('click', handleSubmit);
     categorySelect.addEventListener('change', updateCategoryColor);
-    drawBaseFace();
 }
 init();
