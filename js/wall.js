@@ -93,7 +93,6 @@ class Bubble {
 
     initPosition() {
         const speed = this.mode === 'flow' ? 1.5 : 0.8;
-        
         let attempts = 0;
         let valid = false;
         
@@ -172,23 +171,27 @@ class Bubble {
 
         const rgb = colorMap[this.data.category] || colorMap['default'];
         
-        // 1. 陰影
+        // 1. 氣泡外光暈
         ctx.shadowColor = `rgba(${rgb}, 0.5)`;
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
 
-        // 2. 氣泡本體 (純白)
+        // 2. 氣泡底色 (純白)
         ctx.beginPath();
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
         ctx.fillStyle = "#ffffff"; 
         ctx.fill();
         
+        // 邊框
         ctx.lineWidth = 2;
         ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
         ctx.stroke();
 
-        // 3. 畫頭像 (恢復正常混合模式，但保留多重疊加)
+        // 3. 畫頭像 (重置陰影，準備使用 Shadow Hack 加粗)
+        ctx.shadowColor = "transparent";
         ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+
         ctx.beginPath();
         ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
         ctx.closePath();
@@ -196,24 +199,25 @@ class Bubble {
         
         ctx.globalAlpha = 1.0;
         
-        // 移除 multiply 模式，改回預設 (這能解決圖片消失問題)
-        // ctx.globalCompositeOperation = 'multiply'; // <--- 移除這行
+        // === 關鍵技術：Shadow Stroke 加粗法 ===
+        // 我們利用實心陰影來模擬描邊，這比單純疊加有效得多
+        // 1. 設定深色陰影 (模擬墨水色)
+        ctx.shadowColor = "#2c3e50"; 
+        ctx.shadowBlur = 0; // 不模糊，保持銳利
         
-        // 降低濾鏡強度，只做輕微對比增強
-        ctx.filter = "contrast(1.2)"; 
+        // 2. 第一次繪製：向右下偏移，加粗右下側
+        ctx.shadowOffsetX = 0.5;
+        ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         
-        // 依然畫 5 次，透過物理疊加來加粗線條
-        const s = this.size * 2;
-        const offset = 0.4; 
+        // 3. 第二次繪製：向左上偏移，加粗左上側
+        ctx.shadowOffsetX = -0.5;
+        ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size - offset, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size + offset, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size - offset, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size + offset, s, s);
-        
-        // 還原設定
-        ctx.filter = "none"; 
+        // 4. 最後蓋上本體 (取消陰影，確保顏色正確)
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         
         // 4. 名字標籤
         ctx.restore();
@@ -223,7 +227,8 @@ class Bubble {
         const name = this.data.name;
         const textWidth = ctx.measureText(name).width;
         
-        ctx.fillStyle = "#ffffff"; // 純白背景
+        // 名字背景 (純白)
+        ctx.fillStyle = "#ffffff";
         ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14, 7);
         ctx.fill();
         
