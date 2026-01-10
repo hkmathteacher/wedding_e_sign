@@ -14,8 +14,8 @@ const modalMsg = document.getElementById('modalMsg');
 
 const MAX_VISIBLE_STARS = 30;
 const BOTTOM_MARGIN = 140; 
-// 取得螢幕像素比
-const dpr = window.devicePixelRatio || 1;
+// 限制 dpr 最大為 2，保證效能
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
 let allGuests = [];
 let filteredGuests = [];
@@ -50,6 +50,7 @@ function resize() {
     canvas.height = window.innerHeight * dpr;
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
+    // 全域縮放，讓邏輯座標對齊物理像素
     ctx.scale(dpr, dpr);
 }
 window.addEventListener('resize', resize);
@@ -84,10 +85,16 @@ class Bubble {
         this.mode = mode; 
         this.size = 35; 
         
+        // 氣泡快取 (Off-screen canvas)
+        this.cacheCanvas = null;
+        
         this.image = new Image();
         this.image.src = data.imageData;
         this.loaded = false;
-        this.image.onload = () => { this.loaded = true; };
+        this.image.onload = () => { 
+            this.loaded = true;
+            this.createCache(); // 圖片載入後立即建立快取
+        };
         
         this.scale = 0; 
         this.targetScale = 1;
@@ -96,37 +103,115 @@ class Bubble {
         this.initPosition();
     }
 
+    // ★ 核心優化：建立靜態快取 ★
+    // 把複雜的濾鏡、疊加、文字繪製運算只做一次，存成圖片
+    createCache() {
+        const padding = 20; // 預留陰影和文字空間
+        const diameter = this.size * 2;
+        const canvasSize = diameter + padding * 2; // 邏輯尺寸
+        
+        // 建立離屏 Canvas
+        const c = document.createElement('canvas');
+        c.width = canvasSize * dpr; // 物理尺寸
+        c.height = (canvasSize + 30) * dpr; // 預留下方文字高度
+        const cx = c.getContext('2d');
+        cx.scale(dpr, dpr); // 縮放
+        
+        // 將原點移到氣泡中心 (相對快取畫布)
+        const centerX = canvasSize / 2;
+        const centerY = canvasSize / 2;
+        cx.translate(centerX, centerY);
+        
+        const rgb = colorMap[this.data.category] || colorMap['default'];
+
+        // 1. 陰影
+        cx.shadowColor = `rgba(${rgb}, 0.5)`;
+        cx.shadowBlur = 10;
+        cx.shadowOffsetY = 2;
+
+        // 2. 氣泡背景
+        cx.beginPath();
+        cx.arc(0, 0, this.size, 0, Math.PI * 2);
+        cx.fillStyle = "#FFFFFF"; 
+        cx.fill();
+        
+        cx.lineWidth = 2;
+        cx.strokeStyle = `rgba(${rgb}, 0.9)`;
+        cx.stroke();
+
+        // 3. 畫頭像 (裁切與濾鏡)
+        cx.shadowBlur = 0;
+        cx.save();
+        cx.beginPath();
+        cx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
+        cx.closePath();
+        cx.clip();
+        
+        // 濾鏡與疊加 (只在這裡運算一次！)
+        cx.filter = "contrast(1.5) saturate(1.2)";
+        cx.imageSmoothingEnabled = false;
+        
+        const s = this.size * 2;
+        const offset = -this.size;
+        // 疊加 8 次確保深色
+        for(let k=0; k<8; k++) cx.drawImage(this.image, offset, offset, s, s);
+        
+        cx.restore(); // 移除 clip 和 filter
+
+        // 4. 名字標籤
+        cx.font = "bold 11px 'Noto Sans TC', sans-serif";
+        cx.textAlign = "center";
+        
+        const name = this.data.name;
+        const textWidth = cx.measureText(name).width;
+        
+        cx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        if (cx.roundRect) {
+            cx.beginPath();
+            cx.roundRect(-textWidth/2 - 4, this.size + 5, textWidth + 8, 14, 7);
+            cx.fill();
+        } else {
+            cx.fillRect(-textWidth/2 - 4, this.size + 5, textWidth + 8, 14);
+        }
+        
+        cx.fillStyle = "#5d4037";
+        cx.fillText(name, 0, this.size + 16);
+        
+        // 儲存快取
+        this.cacheCanvas = c;
+        // 計算繪製時的偏移量 (因為原點在中心)
+        this.cacheOffsetX = -centerX;
+        this.cacheOffsetY = -centerY;
+        // 邏輯尺寸 (繪製時用)
+        this.cacheLogicalW = c.width / dpr;
+        this.cacheLogicalH = c.height / dpr;
+    }
+
     initPosition() {
         const speed = this.mode === 'flow' ? 1.5 : 0.8;
-        
         let attempts = 0;
         let valid = false;
         
         while (!valid && attempts < 10) {
             this.vx = (Math.random() - 0.5) * speed;
             this.vy = (Math.random() - 0.5) * speed;
-            if (Math.abs(this.vx) > 0.15 && Math.abs(this.vy) > 0.15) {
-                valid = true;
-            }
+            if (Math.abs(this.vx) > 0.15 && Math.abs(this.vy) > 0.15) valid = true;
             attempts++;
         }
-        
-        if (!valid) {
-            this.vx = 0.3;
-            this.vy = 0.3;
-        }
+        if (!valid) { this.vx = 0.3; this.vy = 0.3; }
 
         const validHeight = (canvas.height / dpr) - BOTTOM_MARGIN - this.size * 2;
+        const logicalWidth = canvas.width / dpr;
 
         if (this.mode === 'bounce') {
-            this.x = Math.random() * ((canvas.width / dpr) - this.size * 2) + this.size;
+            this.x = Math.random() * (logicalWidth - this.size * 2) + this.size;
             this.y = Math.random() * validHeight + this.size;
         } else {
             if (Math.abs(this.vx) > Math.abs(this.vy)) {
-                this.x = this.vx > 0 ? -this.size * 2 : (canvas.width / dpr) + this.size * 2;
+                this.x = this.vx > 0 ? -this.size * 2 : logicalWidth + this.size * 2;
                 this.y = Math.random() * validHeight + this.size;
             } else {
-                this.x = Math.random() * (canvas.width / dpr);
+                this.x = Math.random() * logicalWidth;
                 this.y = this.vy > 0 ? -this.size * 2 : validHeight; 
             }
         }
@@ -146,21 +231,11 @@ class Bubble {
             const padding = this.size;
             const bottomLimit = logicalHeight - BOTTOM_MARGIN - padding;
 
-            if (this.x < padding) {
-                this.x = padding; 
-                this.vx *= -1;
-            } else if (this.x > logicalWidth - padding) {
-                this.x = logicalWidth - padding; 
-                this.vx *= -1;
-            }
+            if (this.x < padding) { this.x = padding; this.vx *= -1; } 
+            else if (this.x > logicalWidth - padding) { this.x = logicalWidth - padding; this.vx *= -1; }
 
-            if (this.y < padding) {
-                this.y = padding;
-                this.vy *= -1;
-            } else if (this.y > bottomLimit) {
-                this.y = bottomLimit; 
-                this.vy = -Math.abs(this.vy); 
-            }
+            if (this.y < padding) { this.y = padding; this.vy *= -1; } 
+            else if (this.y > bottomLimit) { this.y = bottomLimit; this.vy = -Math.abs(this.vy); }
         } else {
             const margin = 150;
             if ((this.vx > 0 && this.x > logicalWidth + margin) || 
@@ -173,81 +248,23 @@ class Bubble {
     }
 
     draw() {
-        if (!this.loaded) return;
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.scale(this.scale, this.scale);
-
-        const rgb = colorMap[this.data.category] || colorMap['default'];
-        
-        // 1. 陰影
-        ctx.shadowColor = `rgba(${rgb}, 0.5)`;
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
-
-        // 2. 氣泡背景 (純白，不透明)
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = "#FFFFFF"; 
-        ctx.fill();
-        
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
-        ctx.stroke();
-
-        // 3. 畫頭像 (裁切)
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        
-        ctx.globalAlpha = 1.0;
-        
-        // ★ 顯色終極方案：濾鏡 + 重疊 ★
-        // 1. 暫存目前的濾鏡設定
-        const originalFilter = ctx.filter;
-        
-        // 2. 加強對比度 (Contrast) 讓淺灰色變黑，飽和度 (Saturate) 讓顏色不失真
-        // Contrast 1.5 = 提高 50% 對比度，這對半透明線條非常有效
-        ctx.filter = "contrast(1.5) saturate(1.2)"; 
-        
-        // 3. 關閉平滑 (Pixelated) 保持銳利度
-        ctx.imageSmoothingEnabled = false; 
-
-        const s = this.size * 2;
-        const offset = -this.size;
-        
-        // 4. 重複疊加 (增加到 8 次)
-        // 使用迴圈讓程式碼整潔，且 8 次配合 Contrast 濾鏡絕對足夠
-        for(let k=0; k<8; k++) {
-            ctx.drawImage(this.image, offset, offset, s, s);
+        // 如果有快取，直接畫快取圖片 (效能極快)
+        if (this.cacheCanvas) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.scale(this.scale, this.scale);
+            
+            // 繪製快取 Canvas
+            ctx.drawImage(
+                this.cacheCanvas, 
+                this.cacheOffsetX, 
+                this.cacheOffsetY, 
+                this.cacheLogicalW, 
+                this.cacheLogicalH
+            );
+            
+            ctx.restore();
         }
-        
-        // 5. 還原濾鏡 (避免影響到文字或其他元素)
-        ctx.filter = originalFilter || 'none';
-        
-        // 4. 名字標籤
-        ctx.restore();
-        ctx.font = "bold 11px 'Noto Sans TC', sans-serif";
-        ctx.textAlign = "center";
-        
-        const name = this.data.name;
-        const textWidth = ctx.measureText(name).width;
-        
-        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-        
-        // 檢查瀏覽器是否支援 roundRect，不支援則用 rect (相容舊手機)
-        if (ctx.roundRect) {
-            ctx.beginPath();
-            ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14, 7);
-            ctx.fill();
-        } else {
-            ctx.fillRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14);
-        }
-        
-        ctx.fillStyle = "#5d4037";
-        ctx.fillText(name, this.x, this.y + this.size + 16);
     }
 }
 
@@ -343,12 +360,15 @@ function startListening() {
 }
 
 function animate(time) {
-    // 清除畫布時要考慮 scale
-    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // 重置為物理像素
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
     for (let i = activeStars.length - 1; i >= 0; i--) {
         const bubble = activeStars[i];
         bubble.update(time);
-        bubble.draw();
+        bubble.draw(); // 現在 draw 只是貼上一張圖，超快
         if (bubble.isDead) activeStars.splice(i, 1);
     }
     spawnStars();
