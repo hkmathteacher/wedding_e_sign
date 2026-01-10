@@ -58,7 +58,7 @@ canvas.addEventListener('click', (e) => {
     for (let i = activeStars.length - 1; i >= 0; i--) {
         const bubble = activeStars[i];
         const dist = Math.hypot(clickX - bubble.x, clickY - bubble.y);
-        if (dist < bubble.size * 1.3) {
+        if (dist < bubble.size * 1.2) {
             openModal(bubble.data);
             break;
         }
@@ -171,7 +171,7 @@ class Bubble {
 
         const rgb = colorMap[this.data.category] || colorMap['default'];
         
-        // 1. 氣泡外光暈
+        // 1. 外光暈 (Shadow)
         ctx.shadowColor = `rgba(${rgb}, 0.5)`;
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
@@ -187,36 +187,20 @@ class Bubble {
         ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
         ctx.stroke();
 
-        // 3. 畫頭像 (重置陰影，準備使用 Shadow Hack 加粗)
-        ctx.shadowColor = "transparent";
+        // 3. 畫頭像 (Basic Draw)
+        ctx.shadowColor = "transparent"; // 清除陰影，避免干擾圖片
         ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-
+        
         ctx.beginPath();
         ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
         
+        // === 回歸最單純的繪製方法 ===
+        // 不用 multiply，不用 filter，不用 offset
+        // 為了讓顏色深一點，我們簡單地疊加繪製兩次即可
         ctx.globalAlpha = 1.0;
-        
-        // === 關鍵技術：Shadow Stroke 加粗法 ===
-        // 我們利用實心陰影來模擬描邊，這比單純疊加有效得多
-        // 1. 設定深色陰影 (模擬墨水色)
-        ctx.shadowColor = "#2c3e50"; 
-        ctx.shadowBlur = 0; // 不模糊，保持銳利
-        
-        // 2. 第一次繪製：向右下偏移，加粗右下側
-        ctx.shadowOffsetX = 0.5;
-        ctx.shadowOffsetY = 0.5;
         ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
-        
-        // 3. 第二次繪製：向左上偏移，加粗左上側
-        ctx.shadowOffsetX = -0.5;
-        ctx.shadowOffsetY = -0.5;
-        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
-        
-        // 4. 最後蓋上本體 (取消陰影，確保顏色正確)
-        ctx.shadowColor = "transparent";
         ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         
         // 4. 名字標籤
@@ -227,11 +211,12 @@ class Bubble {
         const name = this.data.name;
         const textWidth = ctx.measureText(name).width;
         
-        // 名字背景 (純白)
+        // 名字背景
         ctx.fillStyle = "#ffffff";
         ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14, 7);
         ctx.fill();
         
+        // 名字文字
         ctx.fillStyle = "#5d4037";
         ctx.fillText(name, this.x, this.y + this.size + 16);
     }
