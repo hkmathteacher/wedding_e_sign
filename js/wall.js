@@ -23,7 +23,7 @@
         ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
         ctx.stroke();
 
-        /*
+        
         // 3. 畫頭像 (在底色之上)
         ctx.shadowBlur = 0;
         ctx.beginPath();
@@ -34,6 +34,7 @@
         ctx.globalAlpha = 1.0;
         ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         
+        /*
         // === 新增 3.5: 玻璃高光層 (蓋在圖案上) ===
         // 這會讓圖案看起來像是在玻璃球裡面
         ctx.beginPath();
@@ -68,3 +69,4 @@
     }
 
 // ... (後續保持不變)
+
