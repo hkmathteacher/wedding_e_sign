@@ -23,7 +23,8 @@ let isDrawing = false;
 let historyStack = [];
 let currentColor = '#333333'; 
 const MAX_HISTORY = 10;
-const dpr = window.devicePixelRatio || 1;
+// ★ 優化：限制 dpr 最大為 2，避免部分手機記憶體不足
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
 function init() {
     initCanvas();
@@ -31,8 +32,6 @@ function init() {
     renderTemplates();
     bindEvents();
     updateCategoryColor();
-    // 移除 saveState，避免初始化就把空白畫布存入歷史
-    // saveState(); 
     handleIntroAnimation();
 }
 
@@ -56,7 +55,7 @@ function initCanvas() {
     ctx.scale(dpr, dpr);
 
     ctx.strokeStyle = currentColor;
-    // ★ 回退：改回 3px，保持細緻
+    // 保持 3px 細緻線條
     ctx.lineWidth = 3; 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -67,8 +66,8 @@ function initCanvas() {
 
 function drawBaseFace() {
     ctx.save();
-    // 臉形輪廓保持深灰色，但線條改回較細的 2px
-    ctx.strokeStyle = '#999999'; 
+    // ★ 修改：顏色改為 #5d4037 (墨咖)，與五官/外框顏色一致
+    ctx.strokeStyle = '#5d4037'; 
     ctx.lineWidth = 2; 
     ctx.beginPath();
     ctx.arc(140, 140, 90, 0, Math.PI * 2); 
@@ -77,14 +76,12 @@ function drawBaseFace() {
 }
 
 function clearCanvas(saveToHistory = true) {
-    // 傳入邏輯座標 280x280 即可 (因為有 scale)
     ctx.clearRect(0, 0, 280, 280);
-    
     drawBaseFace();
     
     // 重置畫筆
     ctx.strokeStyle = currentColor;
-    ctx.lineWidth = 3; // ★ 回退到 3
+    ctx.lineWidth = 3; 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     
