@@ -14,7 +14,7 @@ const modalMsg = document.getElementById('modalMsg');
 
 const MAX_VISIBLE_STARS = 30;
 const BOTTOM_MARGIN = 140; 
-// ★ 新增：取得螢幕像素比 (例如 Retina 螢幕通常是 2 或 3)
+// 取得螢幕像素比
 const dpr = window.devicePixelRatio || 1;
 
 let allGuests = [];
@@ -46,13 +46,10 @@ const filterOptions = [
 ];
 
 function resize() {
-    // ★ 關鍵修正：設定 Canvas 為高清模式
     canvas.width = window.innerWidth * dpr;
     canvas.height = window.innerHeight * dpr;
-    // 透過 CSS 確保顯示尺寸正確
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
-    // 縮放繪圖座標系，這樣後續的繪圖邏輯都不用改
     ctx.scale(dpr, dpr);
 }
 window.addEventListener('resize', resize);
@@ -207,18 +204,28 @@ class Bubble {
         
         ctx.globalAlpha = 1.0;
         
-        // ★ 顯色增強方案 ★
-        // 1. 關閉平滑，保持像素銳利
+        // ★ 顯色終極方案：濾鏡 + 重疊 ★
+        // 1. 暫存目前的濾鏡設定
+        const originalFilter = ctx.filter;
+        
+        // 2. 加強對比度 (Contrast) 讓淺灰色變黑，飽和度 (Saturate) 讓顏色不失真
+        // Contrast 1.5 = 提高 50% 對比度，這對半透明線條非常有效
+        ctx.filter = "contrast(1.5) saturate(1.2)"; 
+        
+        // 3. 關閉平滑 (Pixelated) 保持銳利度
         ctx.imageSmoothingEnabled = false; 
 
-        // 2. 智慧疊加：從 3 次增加到 5 次
-        // 因為線條變回 3px (縮小後不到 1px)，需要更多次疊加來增加不透明度
         const s = this.size * 2;
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        const offset = -this.size;
+        
+        // 4. 重複疊加 (增加到 8 次)
+        // 使用迴圈讓程式碼整潔，且 8 次配合 Contrast 濾鏡絕對足夠
+        for(let k=0; k<8; k++) {
+            ctx.drawImage(this.image, offset, offset, s, s);
+        }
+        
+        // 5. 還原濾鏡 (避免影響到文字或其他元素)
+        ctx.filter = originalFilter || 'none';
         
         // 4. 名字標籤
         ctx.restore();
@@ -229,8 +236,15 @@ class Bubble {
         const textWidth = ctx.measureText(name).width;
         
         ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-        ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14, 7);
-        ctx.fill();
+        
+        // 檢查瀏覽器是否支援 roundRect，不支援則用 rect (相容舊手機)
+        if (ctx.roundRect) {
+            ctx.beginPath();
+            ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14, 7);
+            ctx.fill();
+        } else {
+            ctx.fillRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14);
+        }
         
         ctx.fillStyle = "#5d4037";
         ctx.fillText(name, this.x, this.y + this.size + 16);
