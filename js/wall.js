@@ -57,8 +57,8 @@ canvas.addEventListener('click', (e) => {
     for (let i = activeStars.length - 1; i >= 0; i--) {
         const bubble = activeStars[i];
         const dist = Math.hypot(clickX - bubble.x, clickY - bubble.y);
-        // 放寬點擊判定範圍
-        if (dist < bubble.size * 1.2) {
+        // 放寬點擊判定範圍 (因為氣泡變小了，點擊範圍要稍微大一點才好點)
+        if (dist < bubble.size * 1.3) {
             openModal(bubble.data);
             break;
         }
@@ -77,7 +77,9 @@ class Bubble {
     constructor(data, mode) {
         this.data = data;
         this.mode = mode; 
-        this.size = 35; // 氣泡大小
+        
+        // 修改：縮小尺寸至 35
+        this.size = 35; 
         
         this.image = new Image();
         this.image.src = data.imageData;
@@ -92,11 +94,9 @@ class Bubble {
     }
 
     initPosition() {
-        // 稍微提升速度，避免數值過小
         const speed = this.mode === 'flow' ? 1.5 : 0.8;
         
-        // === 修復無限迴圈 ===
-        // 設定一個計數器，防止無限重試
+        // 防止無限迴圈的隨機位置生成
         let attempts = 0;
         let valid = false;
         
@@ -104,15 +104,13 @@ class Bubble {
             this.vx = (Math.random() - 0.5) * speed;
             this.vy = (Math.random() - 0.5) * speed;
             
-            // 檢查：速度不能太慢 (接近靜止)，也不能太水平或垂直
-            // 降低門檻至 0.15，確保有足夠的隨機空間
+            // 確保有足夠的斜向移動
             if (Math.abs(this.vx) > 0.15 && Math.abs(this.vy) > 0.15) {
                 valid = true;
             }
             attempts++;
         }
         
-        // 如果隨機 10 次都不行，給一個預設斜向速度
         if (!valid) {
             this.vx = 0.3;
             this.vy = 0.3;
@@ -162,44 +160,51 @@ class Bubble {
 
         const rgb = colorMap[this.data.category] || colorMap['default'];
         
-        // 陰影
-        ctx.shadowColor = `rgba(${rgb}, 0.6)`;
-        ctx.shadowBlur = 10;
+        // 1. 陰影 (光暈)
+        ctx.shadowColor = `rgba(${rgb}, 0.5)`;
+        ctx.shadowBlur = 8;
         ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
 
-        // 氣泡本體 (白色實心)
+        // 2. 氣泡本體 (修改：純白實色背景)
         ctx.beginPath();
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+        
+        // 關鍵：使用不透明的白色，確保圖片對比度最高
         ctx.fillStyle = "#ffffff"; 
         ctx.fill();
         
+        // 邊框
         ctx.lineWidth = 2;
-        ctx.strokeStyle = `rgba(${rgb}, 0.8)`;
+        ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
         ctx.stroke();
 
-        // 頭像
-        ctx.shadowBlur = 0;
+        // 3. 畫頭像
+        ctx.shadowBlur = 0; // 圖片內部不要陰影
         ctx.beginPath();
-        ctx.arc(0, 0, this.size - 3, 0, Math.PI * 2);
+        ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2); // 留一點白邊
         ctx.closePath();
         ctx.clip();
+        
+        // 確保繪製圖片時不透明度為 100%
+        ctx.globalAlpha = 1.0;
         ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         
-        // 名字
+        // 4. 名字標籤 (配合縮小後的尺寸調整位置)
         ctx.restore();
-        ctx.fillStyle = "#5d4037";
-        ctx.font = "600 11px 'Noto Sans TC'";
+        ctx.font = "bold 11px 'Noto Sans TC', sans-serif";
         ctx.textAlign = "center";
         
         const name = this.data.name;
         const textWidth = ctx.measureText(name).width;
         
-        // 名字背景條
-        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-        ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 16, 8);
+        // 名字背景 (淡白色，讓字浮現)
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        // 位置計算：氣泡底部 + 間距
+        ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 6, textWidth + 8, 14, 7);
         ctx.fill();
         
-        ctx.fillStyle = "#5d4037";
+        // 名字文字
+        ctx.fillStyle = "#5d4037"; // 深咖啡色
         ctx.fillText(name, this.x, this.y + this.size + 17);
     }
 }
