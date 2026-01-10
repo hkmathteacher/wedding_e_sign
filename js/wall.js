@@ -12,10 +12,23 @@ const modalImg = document.getElementById('modalImg');
 const modalName = document.getElementById('modalName');
 const modalMsg = document.getElementById('modalMsg');
 
-const MAX_VISIBLE_STARS = 30;
-const BOTTOM_MARGIN = 140; 
-// 限制 dpr 最大為 2，保證效能
+// 限制 dpr 最大為 2，保證效能同時維持清晰度
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+// ★ 1. 響應式判斷
+function isMobile() {
+    return window.innerWidth < 600;
+}
+
+// 手機版顯示少一點 (15顆)，電腦版 (30顆)
+function getMaxStars() {
+    return isMobile() ? 15 : 30;
+}
+
+// 底部保留高度 (手機版留少一點，增加可視範圍)
+function getBottomMargin() {
+    return isMobile() ? 100 : 140;
+}
 
 let allGuests = [];
 let filteredGuests = [];
@@ -46,11 +59,11 @@ const filterOptions = [
 ];
 
 function resize() {
+    // 設定高解析度畫布
     canvas.width = window.innerWidth * dpr;
     canvas.height = window.innerHeight * dpr;
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
-    // 全域縮放，讓邏輯座標對齊物理像素
     ctx.scale(dpr, dpr);
 }
 window.addEventListener('resize', resize);
@@ -64,7 +77,8 @@ canvas.addEventListener('click', (e) => {
     for (let i = activeStars.length - 1; i >= 0; i--) {
         const bubble = activeStars[i];
         const dist = Math.hypot(clickX - bubble.x, clickY - bubble.y);
-        if (dist < bubble.size * 1.3) {
+        // 手機版點擊範圍稍微加大，比較好點
+        if (dist < bubble.size * 1.5) {
             openModal(bubble.data);
             break;
         }
@@ -83,9 +97,12 @@ class Bubble {
     constructor(data, mode) {
         this.data = data;
         this.mode = mode; 
-        this.size = 35; 
         
-        // 氣泡快取 (Off-screen canvas)
+        // ★ 2. 氣泡大小調整
+        // 手機版：半徑 22px (直徑 44px) -> 解決臉太大的問題
+        // 電腦版：半徑 35px (直徑 70px)
+        this.size = isMobile() ? 22 : 35;
+        
         this.cacheCanvas = null;
         
         this.image = new Image();
@@ -93,7 +110,7 @@ class Bubble {
         this.loaded = false;
         this.image.onload = () => { 
             this.loaded = true;
-            this.createCache(); // 圖片載入後立即建立快取
+            this.createCache(); 
         };
         
         this.scale = 0; 
@@ -103,21 +120,17 @@ class Bubble {
         this.initPosition();
     }
 
-    // ★ 核心優化：建立靜態快取 ★
-    // 把複雜的濾鏡、疊加、文字繪製運算只做一次，存成圖片
     createCache() {
-        const padding = 20; // 預留陰影和文字空間
+        const padding = 20; 
         const diameter = this.size * 2;
-        const canvasSize = diameter + padding * 2; // 邏輯尺寸
+        const canvasSize = diameter + padding * 2; 
         
-        // 建立離屏 Canvas
         const c = document.createElement('canvas');
-        c.width = canvasSize * dpr; // 物理尺寸
-        c.height = (canvasSize + 30) * dpr; // 預留下方文字高度
+        c.width = canvasSize * dpr; 
+        c.height = (canvasSize + 30) * dpr; 
         const cx = c.getContext('2d');
-        cx.scale(dpr, dpr); // 縮放
+        cx.scale(dpr, dpr); 
         
-        // 將原點移到氣泡中心 (相對快取畫布)
         const centerX = canvasSize / 2;
         const centerY = canvasSize / 2;
         cx.translate(centerX, centerY);
@@ -139,7 +152,7 @@ class Bubble {
         cx.strokeStyle = `rgba(${rgb}, 0.9)`;
         cx.stroke();
 
-        // 3. 畫頭像 (裁切與濾鏡)
+        // 3. 畫頭像
         cx.shadowBlur = 0;
         cx.save();
         cx.beginPath();
@@ -147,16 +160,22 @@ class Bubble {
         cx.closePath();
         cx.clip();
         
-        // 濾鏡與疊加 (只在這裡運算一次！)
-        cx.filter = "contrast(1.5) saturate(1.2)";
-        cx.imageSmoothingEnabled = false;
+        // ★ 3. 移除濾鏡，確保顏色準確 ★
+        // cx.filter = "contrast(1.5) saturate(1.2)"; // 移除這行
+        
+        // 保持平滑開啟 (預設)，避免線條鋸齒，靠疊加來增加濃度
+        cx.imageSmoothingEnabled = true; 
         
         const s = this.size * 2;
         const offset = -this.size;
-        // 疊加 8 次確保深色
-        for(let k=0; k<8; k++) cx.drawImage(this.image, offset, offset, s, s);
         
-        cx.restore(); // 移除 clip 和 filter
+        // ★ 4. 保持多重疊加 (Stacking) ★
+        // 即使沒有濾鏡，疊加 8 次也能讓半透明的 3px 線條變得紮實
+        for(let k=0; k<8; k++) {
+            cx.drawImage(this.image, offset, offset, s, s);
+        }
+        
+        cx.restore();
 
         // 4. 名字標籤
         cx.font = "bold 11px 'Noto Sans TC', sans-serif";
@@ -177,12 +196,9 @@ class Bubble {
         cx.fillStyle = "#5d4037";
         cx.fillText(name, 0, this.size + 16);
         
-        // 儲存快取
         this.cacheCanvas = c;
-        // 計算繪製時的偏移量 (因為原點在中心)
         this.cacheOffsetX = -centerX;
         this.cacheOffsetY = -centerY;
-        // 邏輯尺寸 (繪製時用)
         this.cacheLogicalW = c.width / dpr;
         this.cacheLogicalH = c.height / dpr;
     }
@@ -200,16 +216,21 @@ class Bubble {
         }
         if (!valid) { this.vx = 0.3; this.vy = 0.3; }
 
-        const validHeight = (canvas.height / dpr) - BOTTOM_MARGIN - this.size * 2;
         const logicalWidth = canvas.width / dpr;
+        const logicalHeight = canvas.height / dpr;
+        
+        // ★ 5. 安全邊界計算
+        // 確保氣泡不會生成在底部 Filter Bar 的位置
+        const validHeight = logicalHeight - getBottomMargin() - this.size * 2;
 
         if (this.mode === 'bounce') {
             this.x = Math.random() * (logicalWidth - this.size * 2) + this.size;
-            this.y = Math.random() * validHeight + this.size;
+            // Math.max 確保不會因為邊界太小而算出負數
+            this.y = Math.random() * Math.max(validHeight, 50) + this.size; 
         } else {
             if (Math.abs(this.vx) > Math.abs(this.vy)) {
                 this.x = this.vx > 0 ? -this.size * 2 : logicalWidth + this.size * 2;
-                this.y = Math.random() * validHeight + this.size;
+                this.y = Math.random() * Math.max(validHeight, 50) + this.size;
             } else {
                 this.x = Math.random() * logicalWidth;
                 this.y = this.vy > 0 ? -this.size * 2 : validHeight; 
@@ -229,13 +250,26 @@ class Bubble {
 
         if (this.mode === 'bounce') {
             const padding = this.size;
-            const bottomLimit = logicalHeight - BOTTOM_MARGIN - padding;
+            // ★ 6. 嚴格邊界檢查
+            const bottomLimit = logicalHeight - getBottomMargin() - padding;
 
-            if (this.x < padding) { this.x = padding; this.vx *= -1; } 
-            else if (this.x > logicalWidth - padding) { this.x = logicalWidth - padding; this.vx *= -1; }
+            // X 軸
+            if (this.x < padding) { 
+                this.x = padding; 
+                this.vx *= -1; 
+            } else if (this.x > logicalWidth - padding) { 
+                this.x = logicalWidth - padding; 
+                this.vx *= -1; 
+            }
 
-            if (this.y < padding) { this.y = padding; this.vy *= -1; } 
-            else if (this.y > bottomLimit) { this.y = bottomLimit; this.vy = -Math.abs(this.vy); }
+            // Y 軸
+            if (this.y < padding) { 
+                this.y = padding; 
+                this.vy *= -1; 
+            } else if (this.y > bottomLimit) { 
+                this.y = bottomLimit; 
+                this.vy = -Math.abs(this.vy); // 確保向上反彈
+            }
         } else {
             const margin = 150;
             if ((this.vx > 0 && this.x > logicalWidth + margin) || 
@@ -248,13 +282,11 @@ class Bubble {
     }
 
     draw() {
-        // 如果有快取，直接畫快取圖片 (效能極快)
         if (this.cacheCanvas) {
             ctx.save();
             ctx.translate(this.x, this.y);
             ctx.scale(this.scale, this.scale);
             
-            // 繪製快取 Canvas
             ctx.drawImage(
                 this.cacheCanvas, 
                 this.cacheOffsetX, 
@@ -272,13 +304,15 @@ function updateGuestFilter() {
     if (currentCategoryFilter === 'all') { filteredGuests = [...allGuests]; } 
     else { filteredGuests = allGuests.filter(g => g.category === currentCategoryFilter); }
     playbackQueue = []; 
-    const isCrowded = filteredGuests.length > MAX_VISIBLE_STARS;
+    // ★ 7. 使用動態數量限制
+    const isCrowded = filteredGuests.length > getMaxStars();
     if (!isCrowded) { activeStars.forEach(star => star.mode = 'bounce'); }
 }
 
 function spawnStars() {
-    const targetCount = Math.min(filteredGuests.length, MAX_VISIBLE_STARS);
-    const isCrowded = filteredGuests.length > MAX_VISIBLE_STARS;
+    // ★ 7. 使用動態數量限制
+    const targetCount = Math.min(filteredGuests.length, getMaxStars());
+    const isCrowded = filteredGuests.length > getMaxStars();
     const mode = isCrowded ? 'flow' : 'bounce';
     
     while (activeStars.length < targetCount) {
@@ -368,7 +402,7 @@ function animate(time) {
     for (let i = activeStars.length - 1; i >= 0; i--) {
         const bubble = activeStars[i];
         bubble.update(time);
-        bubble.draw(); // 現在 draw 只是貼上一張圖，超快
+        bubble.draw(); 
         if (bubble.isDead) activeStars.splice(i, 1);
     }
     spawnStars();
