@@ -58,7 +58,7 @@ canvas.addEventListener('click', (e) => {
     for (let i = activeStars.length - 1; i >= 0; i--) {
         const bubble = activeStars[i];
         const dist = Math.hypot(clickX - bubble.x, clickY - bubble.y);
-        if (dist < bubble.size * 1.2) {
+        if (dist < bubble.size * 1.3) {
             openModal(bubble.data);
             break;
         }
@@ -171,37 +171,54 @@ class Bubble {
 
         const rgb = colorMap[this.data.category] || colorMap['default'];
         
-        // 1. 外光暈 (Shadow)
+        // 1. 陰影 (柔光)
         ctx.shadowColor = `rgba(${rgb}, 0.5)`;
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
+        ctx.shadowBlur = 12; // 稍微增加光暈
+        ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4;
 
-        // 2. 氣泡底色 (純白)
+        // 2. 氣泡本體 (關鍵修改：改為半透明柔白)
         ctx.beginPath();
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = "#ffffff"; 
+        // 使用 0.85 的不透明度，既能遮擋雜訊，又能保留透光感
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)"; 
         ctx.fill();
         
         // 邊框
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
+        ctx.lineWidth = 1.5; // 稍微變細一點，更精緻
+        ctx.strokeStyle = `rgba(${rgb}, 0.8)`;
         ctx.stroke();
 
-        // 3. 畫頭像 (Basic Draw)
-        ctx.shadowColor = "transparent"; // 清除陰影，避免干擾圖片
+        // 3. 畫頭像 (保留高強度顯影邏輯)
         ctx.shadowBlur = 0;
-        
         ctx.beginPath();
         ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
         
-        // === 回歸最單純的繪製方法 ===
-        // 不用 multiply，不用 filter，不用 offset
-        // 為了讓顏色深一點，我們簡單地疊加繪製兩次即可
         ctx.globalAlpha = 1.0;
-        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
-        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
+        
+        // === 畫質增強：濾鏡 + 多重疊加 ===
+        // 1. 提高對比度，讓線條變深
+        ctx.filter = "contrast(1.5) brightness(0.95)"; 
+        
+        // 2. 設定深色陰影來模擬描邊
+        ctx.shadowColor = "#3e2723"; // 深咖啡色陰影，比純黑柔和
+        ctx.shadowBlur = 0;
+        
+        const s = this.size * 2;
+        
+        // 繪製 3 次 (中心 + 偏移)
+        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        // 還原
+        ctx.filter = "none";
         
         // 4. 名字標籤
         ctx.restore();
@@ -211,12 +228,11 @@ class Bubble {
         const name = this.data.name;
         const textWidth = ctx.measureText(name).width;
         
-        // 名字背景
-        ctx.fillStyle = "#ffffff";
+        // 名字背景 (配合氣泡的半透明感)
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
         ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14, 7);
         ctx.fill();
         
-        // 名字文字
         ctx.fillStyle = "#5d4037";
         ctx.fillText(name, this.x, this.y + this.size + 16);
     }
