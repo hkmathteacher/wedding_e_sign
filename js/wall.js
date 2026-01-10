@@ -13,7 +13,6 @@ const modalName = document.getElementById('modalName');
 const modalMsg = document.getElementById('modalMsg');
 
 const MAX_VISIBLE_STARS = 30;
-// 底部保留高度
 const BOTTOM_MARGIN = 120; 
 
 let allGuests = [];
@@ -78,7 +77,7 @@ class Bubble {
     constructor(data, mode) {
         this.data = data;
         this.mode = mode; 
-        this.size = 35; 
+        this.size = 35; // 保持 35
         
         this.image = new Image();
         this.image.src = data.imageData;
@@ -178,9 +177,11 @@ class Bubble {
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
 
-        // 2. 氣泡本體 (純白)
+        // 2. 氣泡本體
         ctx.beginPath();
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+        
+        // === 強化 1: 100% 純白不透明背景 ===
         ctx.fillStyle = "#ffffff"; 
         ctx.fill();
         
@@ -188,7 +189,7 @@ class Bubble {
         ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
         ctx.stroke();
 
-        // 3. 畫頭像 (畫質極致增強)
+        // 3. 畫頭像 (超級強化版)
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
@@ -197,15 +198,27 @@ class Bubble {
         
         ctx.globalAlpha = 1.0;
         
-        // === 關鍵修改：使用 multiply 混合模式與濾鏡 ===
-        // 這能確保縮小後的線條依然深邃清晰
+        // === 強化 2: 色彩增值模式 ===
+        // 這會讓重疊的像素變深，等於自動加黑線條
         ctx.globalCompositeOperation = 'multiply';
-        ctx.filter = "contrast(2.0) brightness(0.95)"; 
         
-        // 重複繪製 3 次以加深線條
-        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
-        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
-        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
+        // === 強化 3: 極限對比度濾鏡 ===
+        // 將淺灰變成深黑，增強可讀性
+        ctx.filter = "contrast(2.5) brightness(0.95)"; 
+        
+        // === 強化 4: 5點位移重繪 (筆觸加粗) ===
+        // 在縮小的情況下，線條會變虛，我們透過微小偏移重複畫 5 次
+        // 來人工「加粗」線條
+        const s = this.size * 2;
+        const offset = 0.4; // 偏移量
+        
+        // 中間
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        // 上下左右微調重疊
+        ctx.drawImage(this.image, -this.size - offset, -this.size, s, s); // 左
+        ctx.drawImage(this.image, -this.size + offset, -this.size, s, s); // 右
+        ctx.drawImage(this.image, -this.size, -this.size - offset, s, s); // 上
+        ctx.drawImage(this.image, -this.size, -this.size + offset, s, s); // 下
         
         // 還原設定
         ctx.filter = "none"; 
@@ -219,7 +232,8 @@ class Bubble {
         const name = this.data.name;
         const textWidth = ctx.measureText(name).width;
         
-        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        // 名字背景條 (純白，確保文字清晰)
+        ctx.fillStyle = "#ffffff";
         ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14, 7);
         ctx.fill();
         
