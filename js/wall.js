@@ -216,6 +216,78 @@ class Bubble {
         
         ctx.shadowColor = "transparent";
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
+
+        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+
+        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+
+        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+
+        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+
+        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+
+        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+
+        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+
+        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        
+        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
         
         // 還原
         ctx.filter = "none";
@@ -344,5 +416,6 @@ function animate(time) {
 renderFilterUI();
 startListening();
 requestAnimationFrame(animate);
+
 
 
