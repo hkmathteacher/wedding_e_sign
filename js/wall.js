@@ -57,7 +57,8 @@ canvas.addEventListener('click', (e) => {
     for (let i = activeStars.length - 1; i >= 0; i--) {
         const bubble = activeStars[i];
         const dist = Math.hypot(clickX - bubble.x, clickY - bubble.y);
-        if (dist < bubble.size * 1.1) {
+        // 放寬點擊判定範圍
+        if (dist < bubble.size * 1.2) {
             openModal(bubble.data);
             break;
         }
@@ -76,37 +77,51 @@ class Bubble {
     constructor(data, mode) {
         this.data = data;
         this.mode = mode; 
-        
-        // 修改 1: 氣泡半徑改為 35
-        this.size = 35; 
+        this.size = 35; // 氣泡大小
         
         this.image = new Image();
         this.image.src = data.imageData;
         this.loaded = false;
         this.image.onload = () => { this.loaded = true; };
+        
         this.scale = 0; 
         this.targetScale = 1;
         this.floatOffset = Math.random() * 100;
+        
         this.initPosition();
     }
 
     initPosition() {
-        const speed = this.mode === 'flow' ? 1.2 : 0.6;
+        // 稍微提升速度，避免數值過小
+        const speed = this.mode === 'flow' ? 1.5 : 0.8;
+        
+        // === 修復無限迴圈 ===
+        // 設定一個計數器，防止無限重試
+        let attempts = 0;
         let valid = false;
-        // 斜向飛行檢查
-        while (!valid) {
+        
+        while (!valid && attempts < 10) {
             this.vx = (Math.random() - 0.5) * speed;
             this.vy = (Math.random() - 0.5) * speed;
-            if (Math.abs(this.vx) > 0.3 && Math.abs(this.vy) > 0.3) {
+            
+            // 檢查：速度不能太慢 (接近靜止)，也不能太水平或垂直
+            // 降低門檻至 0.15，確保有足夠的隨機空間
+            if (Math.abs(this.vx) > 0.15 && Math.abs(this.vy) > 0.15) {
                 valid = true;
             }
+            attempts++;
+        }
+        
+        // 如果隨機 10 次都不行，給一個預設斜向速度
+        if (!valid) {
+            this.vx = 0.3;
+            this.vy = 0.3;
         }
 
         if (this.mode === 'bounce') {
             this.x = Math.random() * canvas.width;
             this.y = Math.random() * canvas.height;
         } else {
-            // Flow: 根據縮小後的 size 調整生成邊距
             if (Math.abs(this.vx) > Math.abs(this.vy)) {
                 this.x = this.vx > 0 ? -this.size * 2 : canvas.width + this.size * 2;
                 this.y = Math.random() * canvas.height;
@@ -121,6 +136,7 @@ class Bubble {
         this.x += this.vx;
         this.y += this.vy;
         this.y += Math.sin(time * 0.002 + this.floatOffset) * 0.2;
+        
         if (this.scale < this.targetScale) this.scale += 0.02;
 
         if (this.mode === 'bounce') {
@@ -129,7 +145,10 @@ class Bubble {
             if (this.y < padding || this.y > canvas.height - padding) this.vy *= -1;
         } else {
             const margin = 150;
-            if ((this.vx > 0 && this.x > canvas.width + margin) || (this.vx < 0 && this.x < -margin) || (this.vy > 0 && this.y > canvas.height + margin) || (this.vy < 0 && this.y < -margin)) {
+            if ((this.vx > 0 && this.x > canvas.width + margin) || 
+                (this.vx < 0 && this.x < -margin) || 
+                (this.vy > 0 && this.y > canvas.height + margin) || 
+                (this.vy < 0 && this.y < -margin)) {
                 this.isDead = true;
             }
         }
@@ -143,16 +162,14 @@ class Bubble {
 
         const rgb = colorMap[this.data.category] || colorMap['default'];
         
-        // 陰影維持
+        // 陰影
         ctx.shadowColor = `rgba(${rgb}, 0.6)`;
-        ctx.shadowBlur = 10; // 配合尺寸稍微縮小模糊範圍
+        ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
 
-        // 畫氣泡本體
+        // 氣泡本體 (白色實心)
         ctx.beginPath();
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-        
-        // 修改 2: 實色背景 (白色 #ffffff，不透明)
         ctx.fillStyle = "#ffffff"; 
         ctx.fill();
         
@@ -160,28 +177,25 @@ class Bubble {
         ctx.strokeStyle = `rgba(${rgb}, 0.8)`;
         ctx.stroke();
 
-        // 畫頭像
+        // 頭像
         ctx.shadowBlur = 0;
         ctx.beginPath();
-        ctx.arc(0, 0, this.size - 3, 0, Math.PI * 2); // 內縮範圍微調
+        ctx.arc(0, 0, this.size - 3, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
         ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         
-        // 畫名字
+        // 名字
         ctx.restore();
         ctx.fillStyle = "#5d4037";
-        
-        // 修改 3: 字體縮小為 11px
         ctx.font = "600 11px 'Noto Sans TC'";
         ctx.textAlign = "center";
         
         const name = this.data.name;
         const textWidth = ctx.measureText(name).width;
         
-        // 名字背景條 (實色背景讓字更清楚)
+        // 名字背景條
         ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-        // 位置調整: y + size + 間距
         ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 16, 8);
         ctx.fill();
         
@@ -190,7 +204,6 @@ class Bubble {
     }
 }
 
-// ... (後續邏輯保持不變) ...
 function updateGuestFilter() {
     if (currentCategoryFilter === 'all') { filteredGuests = [...allGuests]; } 
     else { filteredGuests = allGuests.filter(g => g.category === currentCategoryFilter); }
@@ -198,27 +211,33 @@ function updateGuestFilter() {
     const isCrowded = filteredGuests.length > MAX_VISIBLE_STARS;
     if (!isCrowded) { activeStars.forEach(star => star.mode = 'bounce'); }
 }
+
 function spawnStars() {
     const targetCount = Math.min(filteredGuests.length, MAX_VISIBLE_STARS);
     const isCrowded = filteredGuests.length > MAX_VISIBLE_STARS;
     const mode = isCrowded ? 'flow' : 'bounce';
+    
     while (activeStars.length < targetCount) {
         if (playbackQueue.length === 0) {
             if (filteredGuests.length === 0) break;
             playbackQueue = shuffleArray(filteredGuests);
         }
+        
         let candidate = null;
         let attempts = 0;
         const maxAttempts = playbackQueue.length;
+        
         while (attempts < maxAttempts) {
             const potentialGuest = playbackQueue.pop();
             const isAlreadyOnScreen = activeStars.some(s => s.data.id === potentialGuest.id);
             if (isAlreadyOnScreen) { playbackQueue.unshift(potentialGuest); attempts++; } 
             else { candidate = potentialGuest; break; }
         }
+        
         if (candidate) { activeStars.push(new Bubble(candidate, mode)); } else { break; }
     }
 }
+
 function shuffleArray(array) {
     let arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -227,6 +246,7 @@ function shuffleArray(array) {
     }
     return arr;
 }
+
 function renderFilterUI() {
     filterButtons.innerHTML = '';
     filterOptions.forEach(opt => {
@@ -246,6 +266,7 @@ function renderFilterUI() {
     });
     filterSelect.onchange = (e) => applyFilter(e.target.value);
 }
+
 function applyFilter(filterId) {
     if (currentCategoryFilter === filterId) return;
     currentCategoryFilter = filterId;
@@ -258,15 +279,22 @@ function applyFilter(filterId) {
     });
     filterSelect.value = filterId;
 }
+
 function startListening() {
+    console.log("開始連結 Firebase...");
     const q = query(collection(db, "guests"), orderBy("timestamp", "asc"));
     onSnapshot(q, (snapshot) => {
         loading.style.display = 'none';
         allGuests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log(`收到 ${allGuests.length} 筆資料`);
         updateGuestFilter();
         spawnStars();
-    }, (error) => { console.error(error); loading.textContent = "連線失敗"; });
+    }, (error) => { 
+        console.error("Firebase 連線錯誤:", error); 
+        loading.textContent = "連線失敗 (請檢查 Console)"; 
+    });
 }
+
 function animate(time) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let i = activeStars.length - 1; i >= 0; i--) {
@@ -278,6 +306,7 @@ function animate(time) {
     spawnStars();
     requestAnimationFrame(animate);
 }
+
 renderFilterUI();
 startListening();
 requestAnimationFrame(animate);
