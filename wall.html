@@ -23,7 +23,9 @@
         }
         @keyframes glow { from { opacity: 0.6; } to { opacity: 1; } }
         #galaxyCanvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; cursor: pointer; }
-        .title-overlay { position: absolute; top: 30px; width: 100%; text-align: center; z-index: 2; pointer-events: none; }
+        
+        /* 修改重點 1: 標題下移，避開按鈕 */
+        .title-overlay { position: absolute; top: 60px; width: 100%; text-align: center; z-index: 2; pointer-events: none; }
         h1 {
             font-family: 'Great Vibes', cursive; font-weight: 400; font-size: 3.5rem; margin: 0;
             color: var(--primary); text-shadow: 2px 2px 0px #fff, 0 0 15px rgba(212, 175, 55, 0.3);
@@ -44,19 +46,24 @@
         .filter-btn.active { background: var(--primary); color: #fff; }
         .filter-select { display: none; padding: 8px 15px; border: none; background: transparent; font-family: 'Cinzel', serif; font-size: 1rem; color: var(--text-main); outline: none; text-align: center; }
         
-        @media (max-width: 768px) {
-            h1 { font-size: 2rem; margin-top: 10px; }
-            .filter-buttons { display: none; }
-            .filter-select { display: block; }
-            .filter-container { width: 80%; max-width: 300px; padding: 5px 10px; }
-            .back-btn { top: 10px; right: 10px; padding: 5px 10px; font-size: 0.8rem; }
-        }
-        
+        /* 修改重點 2: 按鈕移至左上角 */
         .back-btn {
-            position: absolute; top: 30px; right: 30px; z-index: 10;
+            position: absolute; 
+            top: 20px; 
+            left: 20px; /* 原本是 right: 20px */
+            z-index: 10;
             background: rgba(255, 255, 255, 0.8); border: 1px solid var(--primary); color: var(--primary);
             padding: 8px 20px; border-radius: 30px; text-decoration: none;
             font-family: 'Cinzel', serif; font-weight: bold; font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; margin-top: 10px; }
+            .title-overlay { top: 50px; } /* 手機版也稍微下移 */
+            .filter-buttons { display: none; }
+            .filter-select { display: block; }
+            .filter-container { width: 80%; max-width: 300px; padding: 5px 10px; }
+            .back-btn { top: 10px; left: 10px; padding: 5px 10px; font-size: 0.8rem; }
         }
         
         .modal-overlay {
@@ -87,7 +94,7 @@
     </style>
 </head>
 <body>
-    <a href="index.html" class="back-btn">← 畫畫去</a>
+    <a href="index.html" class="back-btn">← 去畫畫</a>
     <div class="title-overlay"><h1>Lilian & Tony Wedding</h1></div>
     <div id="loading">Connecting to Galaxy...</div>
     <div class="filter-container">
