@@ -43,7 +43,8 @@ function handleIntroAnimation() {
 
 function initCanvas() {
     ctx.strokeStyle = currentColor;
-    ctx.lineWidth = 3;
+    // ★ 修改 1: 畫筆加粗到 6，這樣縮小後線條才不會消失
+    ctx.lineWidth = 6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 }
@@ -51,7 +52,7 @@ function initCanvas() {
 function drawBaseFace() {
     ctx.save();
     ctx.strokeStyle = '#ccc'; 
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2; // 輪廓可以維持細一點，或者也加粗到 4
     ctx.beginPath();
     ctx.arc(140, 140, 90, 0, Math.PI * 2); 
     ctx.stroke();
@@ -115,7 +116,6 @@ function applyTemplate(key) {
     img.src = url;
 }
 
-// ... (標準邏輯)
 function renderColorPalette() {
     colorPalette.innerHTML = '';
     brushColors.forEach((color, index) => {
