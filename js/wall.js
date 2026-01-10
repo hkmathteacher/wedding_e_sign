@@ -188,6 +188,16 @@ class Bubble {
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
 
+        // 3. 畫頭像
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        
+        ctx.globalAlpha = 1.0;
+        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
+
         // 2. 氣泡本體
         ctx.beginPath();
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
@@ -199,16 +209,6 @@ class Bubble {
         ctx.lineWidth = 2;
         ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
         ctx.stroke();
-
-        // 3. 畫頭像
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        
-        ctx.globalAlpha = 1.0;
-        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         
         // (這裡不包含 3.5 高光層)
         
@@ -335,4 +335,5 @@ function animate(time) {
 renderFilterUI();
 startListening();
 requestAnimationFrame(animate);
+
 
