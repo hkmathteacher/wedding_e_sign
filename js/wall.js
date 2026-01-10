@@ -13,7 +13,8 @@ const modalName = document.getElementById('modalName');
 const modalMsg = document.getElementById('modalMsg');
 
 const MAX_VISIBLE_STARS = 30;
-const BOTTOM_MARGIN = 120; 
+// 底部保留高度：確保氣泡不會擋住下方的 Filter Bar
+const BOTTOM_MARGIN = 140; 
 
 let allGuests = [];
 let filteredGuests = [];
@@ -93,6 +94,7 @@ class Bubble {
 
     initPosition() {
         const speed = this.mode === 'flow' ? 1.5 : 0.8;
+        
         let attempts = 0;
         let valid = false;
         
@@ -135,6 +137,7 @@ class Bubble {
 
         if (this.mode === 'bounce') {
             const padding = this.size;
+            // 修正：底部邊界計算 (總高度 - 邊距 - 半徑)
             const bottomLimit = canvas.height - BOTTOM_MARGIN - padding;
 
             if (this.x < padding) {
@@ -149,8 +152,9 @@ class Bubble {
                 this.y = padding;
                 this.vy *= -1;
             } else if (this.y > bottomLimit) {
+                // 關鍵修復：如果卡在底部，強制拉回界線內，並反轉速度
                 this.y = bottomLimit; 
-                this.vy *= -1;
+                this.vy = -Math.abs(this.vy); // 確保速度是向上的
             }
         } else {
             const margin = 150;
@@ -171,24 +175,24 @@ class Bubble {
 
         const rgb = colorMap[this.data.category] || colorMap['default'];
         
-        // 1. 陰影 (柔光)
+        // 1. 陰影 (光暈)
         ctx.shadowColor = `rgba(${rgb}, 0.5)`;
-        ctx.shadowBlur = 12; // 稍微增加光暈
-        ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4;
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
 
-        // 2. 氣泡本體 (關鍵修改：改為半透明柔白)
+        // 2. 氣泡本體
         ctx.beginPath();
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-        // 使用 0.85 的不透明度，既能遮擋雜訊，又能保留透光感
-        ctx.fillStyle = "rgba(255, 255, 255, 0)"; 
+        
+        // 修改：使用 90% 不透明白色，增加對比度但保留一點點透感
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)"; 
         ctx.fill();
         
-        // 邊框
-        ctx.lineWidth = 1.5; // 稍微變細一點，更精緻
-        ctx.strokeStyle = `rgba(${rgb}, 0.8)`;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
         ctx.stroke();
 
-        // 3. 畫頭像 (保留高強度顯影邏輯)
+        // 3. 畫頭像 (多重疊加顯影法)
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
@@ -197,100 +201,73 @@ class Bubble {
         
         ctx.globalAlpha = 1.0;
         
-        // === 畫質增強：濾鏡 + 多重疊加 ===
-        // 1. 提高對比度，讓線條變深
-        ctx.filter = "contrast(1.5) brightness(0.95)"; 
-        
-        // 2. 設定深色陰影來模擬描邊
-        ctx.shadowColor = "#3e2723"; // 深咖啡色陰影，比純黑柔和
-        ctx.shadowBlur = 0;
-        
+        // === 關鍵修改：原地疊加 4 次 ===
+        // 這會讓縮小後變淡的半透明像素迅速變回實心顏色
+        // 解決「白色背景吃掉線條」的問題，且不會有偏移模糊
         const s = this.size * 2;
-        
-        // 繪製 3 次 (中心 + 偏移)
-        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowColor = "transparent";
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-
-        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowColor = "transparent";
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-
-        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowColor = "transparent";
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-
-        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowColor = "transparent";
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-
-        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowColor = "transparent";
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-
-        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowColor = "transparent";
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-
-        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowColor = "transparent";
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
+        ctx.drawImage(this.image, -this.size, -this.size, s, s);
         ctx.drawImage(this.image, -this.size, -this.size, s, s);
 
-        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowColor = "transparent";
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
 
-        ctx.shadowOffsetX = 0.5; ctx.shadowOffsetY = 0.5;
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowOffsetX = -0.5; ctx.shadowOffsetY = -0.5;
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        ctx.shadowColor = "transparent";
-        ctx.drawImage(this.image, -this.size, -this.size, s, s);
-        
-        // 還原
-        ctx.filter = "none";
+
         
         // 4. 名字標籤
         ctx.restore();
@@ -300,7 +277,7 @@ class Bubble {
         const name = this.data.name;
         const textWidth = ctx.measureText(name).width;
         
-        // 名字背景 (配合氣泡的半透明感)
+        // 名字背景
         ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
         ctx.roundRect(this.x - textWidth/2 - 4, this.y + this.size + 5, textWidth + 8, 14, 7);
         ctx.fill();
@@ -416,6 +393,3 @@ function animate(time) {
 renderFilterUI();
 startListening();
 requestAnimationFrame(animate);
-
-
-
