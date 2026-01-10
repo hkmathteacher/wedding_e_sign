@@ -188,7 +188,7 @@ class Bubble {
         ctx.strokeStyle = `rgba(${rgb}, 0.9)`;
         ctx.stroke();
 
-        // 3. 畫頭像 (畫質增強技巧)
+        // 3. 畫頭像 (畫質極致增強)
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(0, 0, this.size - 2, 0, Math.PI * 2);
@@ -197,16 +197,19 @@ class Bubble {
         
         ctx.globalAlpha = 1.0;
         
-        // === 關鍵修改：增強清晰度 ===
-        // 技巧 A: 增加對比度
-        ctx.filter = "contrast(1.3) saturate(1.1)"; 
+        // === 關鍵修改：使用 multiply 混合模式與濾鏡 ===
+        // 這能確保縮小後的線條依然深邃清晰
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.filter = "contrast(2.0) brightness(0.95)"; 
         
-        // 技巧 B: 疊加繪製兩次，讓變淡的線條變深
+        // 重複繪製 3 次以加深線條
         ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
+        ctx.drawImage(this.image, -this.size, -this.size, this.size * 2, this.size * 2);
         
-        // 還原 filter 以免影響文字
+        // 還原設定
         ctx.filter = "none"; 
+        ctx.globalCompositeOperation = 'source-over';
         
         // 4. 名字標籤
         ctx.restore();
